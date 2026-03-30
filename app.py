@@ -207,6 +207,664 @@ p, li, span, div, td, th { color: #2C1A0E; }
 </style>
 """, unsafe_allow_html=True)
 
+
+# ─── Pre-set Recipe URLs ─────────────────────────────────────────────────────
+PRESET_RECIPE_URLS = {
+
+    # ── CAKE BASES ────────────────────────────────────────────────────────────
+    "Genoise": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/genoise-sponge/"),
+        ("Serious Eats",          "https://www.seriouseats.com/genoise-sponge-cake-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/genoise-cake/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/genoise-recipe"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/genoise-sponge"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/genoise-cake-recipe/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/genoise/"),
+        ("Handle the Heat",       "https://handletheheat.com/genoise-sponge/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/GenoiseSpongeCake.html"),
+        ("Bake from Scratch",     "https://www.bakefromscratch.com/genoise/"),
+    ],
+    "Sponge Cake": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/sponge-cake/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/classic-sponge-cake/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/sponge-cake/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/classic-sponge-cake"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/classic-birthday-cake-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/classic-yellow-cake/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/white-cake-recipe/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/victoria-sponge"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/SpongeCake.html"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/hot-milk-sponge-cake/"),
+    ],
+    "Chiffon": [
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/chiffon-cake-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/chiffon-cake/"),
+        ("Serious Eats",          "https://www.seriouseats.com/chiffon-cake-recipe"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/chiffon-cake/"),
+        ("Handle the Heat",       "https://handletheheat.com/chiffon-cake/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/chiffon-cake/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/ChiffonCake.html"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/lemon-chiffon-cake/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/chiffon-cake"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/chiffon-cake-recipe/"),
+    ],
+    "Angel Food": [
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/angel-food-cake/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/angel-food-cake-recipe"),
+        ("Serious Eats",          "https://www.seriouseats.com/angel-food-cake"),
+        ("Handle the Heat",       "https://handletheheat.com/angel-food-cake/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/angel-food-cake-recipe/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/angel-food-cake/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/angel-food-cake/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/AngelFoodCake.html"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/angel-cake"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/angel-food-cake/"),
+    ],
+    "Japanese Cotton Cheesecake": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/japanese-cheesecake/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/japanese-cheesecake/"),
+        ("Handle the Heat",       "https://handletheheat.com/japanese-cheesecake/"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/japanese-cheesecake-recipe/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/japanese-cheesecake/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/japanese-cotton-cheesecake"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/JapaneseCheesecake.html"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/japanese-cheesecake/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/japanese-milk-bread-recipe"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/japanese-cheesecake"),
+    ],
+    "Dacquoise": [
+        ("Serious Eats",          "https://www.seriouseats.com/dacquoise-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/dacquoise-recipe"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/Dacquoise.html"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/hazelnut-dacquoise"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/dacquoise-recipe/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/dacquoise/"),
+        ("Handle the Heat",       "https://handletheheat.com/dacquoise/"),
+        ("Bake from Scratch",     "https://www.bakefromscratch.com/dacquoise/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/hazelnut-dacquoise"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/chocolate-dacquoise/"),
+    ],
+    "Swiss Roll": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/swiss-roll/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/swiss-roll/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/swiss-roll"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/swiss-roll/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/yule-log-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/chocolate-swiss-roll/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/SwissRoll.html"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/pumpkin-roll/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/lemon-cake-roll/"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/swiss-roll-recipe/"),
+    ],
+    "Pound Cake": [
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/pound-cake/"),
+        ("Serious Eats",          "https://www.seriouseats.com/perfect-pound-cake-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/classic-pound-cake-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/classic-pound-cake/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/pound-cake-recipe/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/pound-cake/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/best-pound-cake/"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/pound-cake-recipe/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/PoundCake.html"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/pound-cake"),
+    ],
+    "Victoria Sponge": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/victoria-sponge-cake/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/classic-victoria-sandwich-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/victoria-sponge-cake/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/victoria-sandwich-recipe"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/victoria-sponge/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/victoria-sponge"),
+        ("Handle the Heat",       "https://handletheheat.com/victoria-sponge-cake/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/VictoriaSandwich.html"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/victoria-sponge-cake/"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/victoria-sponge-recipe/"),
+    ],
+    "Carrot Cake": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/carrot-cake/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/carrot-cake/"),
+        ("Serious Eats",          "https://www.seriouseats.com/the-best-carrot-cake-recipe"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/carrot-cake/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/carrot-cake-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/carrot-cake/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/the-best-carrot-cake-recipe/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/carrot-cake"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/carrot-cake-recipe/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/contest-winning-moist-carrot-cake/"),
+    ],
+    "Red Velvet Cake": [
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/red-velvet-cake/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/red-velvet-cake/"),
+        ("Serious Eats",          "https://www.seriouseats.com/red-velvet-cake-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/red-velvet-cake/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/red-velvet-cake-recipe"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/red-velvet-cake/"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/red-velvet-cake/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/red-velvet-cake"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/red-velvet-cake/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/red-velvet-cake/"),
+    ],
+    "Black Forest Cake": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/black-forest-cake/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/black-forest-cake/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/black-forest-cake/"),
+        ("Serious Eats",          "https://www.seriouseats.com/black-forest-cake"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/black-forest-cake-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/black-forest-cake/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/black-forest-gateau"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/black-forest-cake/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/black-forest-cake/"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/black-forest-cake-recipe/"),
+    ],
+    "Flourless Chocolate Cake": [
+        ("Serious Eats",          "https://www.seriouseats.com/flourless-chocolate-cake-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/flourless-chocolate-cake-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/flourless-chocolate-cake/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/flourless-chocolate-cake/"),
+        ("Handle the Heat",       "https://handletheheat.com/flourless-chocolate-cake/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/flourless-chocolate-cake/"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/flourless-chocolate-cake/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/flourless-chocolate-cake"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/flourless-chocolate-cake/"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/flourless-chocolate-cake/"),
+    ],
+    "Sachertorte": [
+        ("Serious Eats",          "https://www.seriouseats.com/sachertorte-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/sachertorte-recipe"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/sachertorte"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/SacherTorte.html"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/sachertorte/"),
+        ("Handle the Heat",       "https://handletheheat.com/sachertorte/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/sachertorte/"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/sachertorte-recipe/"),
+        ("Bake from Scratch",     "https://www.bakefromscratch.com/sachertorte/"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/sachertorte/"),
+    ],
+    "Mud Cake": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/chocolate-mud-cake/"),
+        ("Taste.com.au",          "https://www.taste.com.au/recipes/best-ever-chocolate-mud-cake/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/mud-cake"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/chocolate-mud-cake/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/mud-cake/"),
+        ("Handle the Heat",       "https://handletheheat.com/chocolate-mud-cake/"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/mud-cake-recipe/"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/chocolate-mud-cake/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/chocolate-mud-cake/"),
+        ("Bake from Scratch",     "https://www.bakefromscratch.com/chocolate-mud-cake/"),
+    ],
+    "Almond Cake": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/almond-cake/"),
+        ("Serious Eats",          "https://www.seriouseats.com/almond-cake-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/almond-cake-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/almond-cake/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/almond-cake/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/almond-cake"),
+        ("Handle the Heat",       "https://handletheheat.com/almond-cake/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/almond-cake/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/almond-cake/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/AlmondCake.html"),
+    ],
+    "Tres Leches Cake": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/tres-leches-cake/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/tres-leches-cake/"),
+        ("Serious Eats",          "https://www.seriouseats.com/tres-leches-cake-recipe"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/tres-leches-cake/"),
+        ("Handle the Heat",       "https://handletheheat.com/tres-leches-cake/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/tres-leches-cake/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/tres-leches-cake-recipe"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/tres-leches-cake/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/tres-leches-cake"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/tres-leches-cake/"),
+    ],
+    "Opera Cake": [
+        ("Serious Eats",          "https://www.seriouseats.com/opera-cake-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/opera-cake-recipe"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/OperaCake.html"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/opera-cake/"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/opera-cake-recipe/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/opera-cake"),
+        ("Bake from Scratch",     "https://www.bakefromscratch.com/opera-cake/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/opera-cake"),
+        ("Handle the Heat",       "https://handletheheat.com/opera-cake/"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/opera-cake-recipe/"),
+    ],
+    "Medovik Honey Cake": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/honey-cake/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/medovik-russian-honey-cake/"),
+        ("Handle the Heat",       "https://handletheheat.com/russian-honey-cake/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/medovik-russian-honey-cake"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/medovik-honey-cake/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/russian-honey-cake"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/russian-honey-cake/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/honey-cake/"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/russian-honey-cake-recipe/"),
+        ("Bake from Scratch",     "https://www.bakefromscratch.com/medovik/"),
+    ],
+    "Tiramisu": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/tiramisu/"),
+        ("Serious Eats",          "https://www.seriouseats.com/the-best-tiramisu-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/tiramisu-recipe/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/tiramisu/"),
+        ("Handle the Heat",       "https://handletheheat.com/tiramisu/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/tiramisu-recipe"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/tiramisu-recipe/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/classic-tiramisu"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/classic-tiramisu/"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/tiramisu-recipe/"),
+    ],
+
+    # ── FILLINGS ──────────────────────────────────────────────────────────────
+    "Lemon Curd": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/lemon-curd/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/lemon-curd/"),
+        ("Serious Eats",          "https://www.seriouseats.com/lemon-curd-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/lemon-curd-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/lemon-curd/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/lemon-curd-recipe/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/lemon-curd/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/lemon-curd"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/lemon-curd-recipe/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/LemonCurd.html"),
+    ],
+    "Pastry Cream": [
+        ("Serious Eats",          "https://www.seriouseats.com/pastry-cream-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/pastry-cream-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/pastry-cream/"),
+        ("Handle the Heat",       "https://handletheheat.com/pastry-cream/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/pastry-cream/"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/pastry-cream/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/PastryCream.html"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/pastry-cream"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/creme-patissiere"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/pastry-cream/"),
+    ],
+    "Salted Caramel Sauce": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/salted-caramel-sauce/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/salted-caramel-recipe/"),
+        ("Serious Eats",          "https://www.seriouseats.com/salted-caramel-sauce-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/salted-caramel-sauce/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/salted-caramel-sauce-recipe"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/salted-caramel-sauce/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/salted-caramel-sauce/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/salted-caramel-sauce"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/salted-caramel-sauce/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/salted-caramel-sauce/"),
+    ],
+    "Frangipane": [
+        ("Serious Eats",          "https://www.seriouseats.com/frangipane-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/frangipane-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/frangipane/"),
+        ("Handle the Heat",       "https://handletheheat.com/frangipane/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/frangipane/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/frangipane"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/frangipane"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/Frangipane.html"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/frangipane/"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/frangipane/"),
+    ],
+    "Dulce de Leche": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/dulce-de-leche/"),
+        ("Serious Eats",          "https://www.seriouseats.com/dulce-de-leche-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/dulce-de-leche-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/dulce-de-leche/"),
+        ("Handle the Heat",       "https://handletheheat.com/dulce-de-leche/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/dulce-de-leche/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/dulce-de-leche"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/dulce-de-leche/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/dulce-de-leche/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/DulceDeleche.html"),
+    ],
+
+    # ── BUTTERCREAMS ─────────────────────────────────────────────────────────
+    "American Buttercream": [
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/american-buttercream-frosting/"),
+        ("Handle the Heat",       "https://handletheheat.com/american-buttercream/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/american-buttercream-frosting/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/american-buttercream/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/vanilla-buttercream-frosting-recipe"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/american-buttercream/"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/vanilla-buttercream-frosting/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/buttercream-icing"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/vanilla-buttercream-frosting/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/ButtercreamFrosting.html"),
+    ],
+    "Swiss Meringue Buttercream": [
+        ("Serious Eats",          "https://www.seriouseats.com/swiss-meringue-buttercream-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/swiss-meringue-buttercream/"),
+        ("Handle the Heat",       "https://handletheheat.com/swiss-meringue-buttercream/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/swiss-meringue-buttercream-recipe"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/swiss-meringue-buttercream/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/swiss-meringue-buttercream/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/swiss-meringue-buttercream"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/swiss-meringue-buttercream"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/swiss-meringue-buttercream/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/SwissMeringueButtercream.html"),
+    ],
+    "Italian Meringue Buttercream": [
+        ("Serious Eats",          "https://www.seriouseats.com/italian-meringue-buttercream-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/italian-meringue-buttercream-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/italian-meringue-buttercream/"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/italian-meringue-buttercream/"),
+        ("Handle the Heat",       "https://handletheheat.com/italian-meringue-buttercream/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/italian-meringue-buttercream/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/italian-meringue-buttercream"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/ItalianMeringueButtercream.html"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/italian-meringue-buttercream"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/italian-meringue-buttercream/"),
+    ],
+    "Cream Cheese Frosting": [
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/cream-cheese-frosting/"),
+        ("Handle the Heat",       "https://handletheheat.com/cream-cheese-frosting/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/cream-cheese-frosting-recipe/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/cream-cheese-frosting/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/cream-cheese-frosting-recipe"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/cream-cheese-frosting/"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/cream-cheese-frosting/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/cream-cheese-icing"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/cream-cheese-frosting/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/CreamCheeseFrosting.html"),
+    ],
+    "Mirror Glaze Cake": [
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/mirror-glaze-recipe/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/mirror-glaze-cake"),
+        ("Handle the Heat",       "https://handletheheat.com/mirror-glaze-cake/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/mirror-glaze/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/mirror-glaze-cake/"),
+        ("Serious Eats",          "https://www.seriouseats.com/mirror-glaze-cake-recipe"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/mirror-glaze-cake"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/mirror-glaze-cake-recipe/"),
+        ("Bake from Scratch",     "https://www.bakefromscratch.com/mirror-glaze/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/mirror-glaze-recipe"),
+    ],
+
+    # ── COOKIES & BISCUITS ────────────────────────────────────────────────────
+    "Shortbread Cookies": [
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/shortbread-cookies/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/shortbread-cookies-recipe"),
+        ("Serious Eats",          "https://www.seriouseats.com/shortbread-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/shortbread-cookies/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/shortbread-cookies/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/shortbread-cookies/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/shortbread"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/shortbread-cookies/"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/shortbread-cookies/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/shortbread-cookies/"),
+    ],
+    "French Macarons": [
+        ("Serious Eats",          "https://www.seriouseats.com/french-macarons-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/macarons/"),
+        ("Handle the Heat",       "https://handletheheat.com/french-macarons/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/french-macarons-recipe"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/french-macarons/"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/macaron-recipe/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/french-macarons"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/macarons"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/macaron-recipe/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/Macarons.html"),
+    ],
+    "Madeleines": [
+        ("Serious Eats",          "https://www.seriouseats.com/madeleine-cookies-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/madeleines-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/madeleines/"),
+        ("Handle the Heat",       "https://handletheheat.com/madeleines/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/madeleines/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/madeleines"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/madeleines/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/madeleines"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/Madeleines.html"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/madeleines/"),
+    ],
+    "Chocolate Chip Cookies": [
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/chewy-chocolate-chip-cookies/"),
+        ("Serious Eats",          "https://www.seriouseats.com/the-food-lab-best-chocolate-chip-cookie-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/best-chocolate-chip-cookies/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/toll-house-chocolate-chip-cookies-recipe"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/the-best-chocolate-chip-cookie-recipe/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/chocolate-chip-cookies/"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/chocolate-chip-cookies/"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/chocolate-chip-cookies/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/best-ever-chocolate-chip-cookies"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/double-chip-cookies/"),
+    ],
+
+    # ── PIES & TARTS ──────────────────────────────────────────────────────────
+    "Apple Pie": [
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/apple-pie-recipe/"),
+        ("Serious Eats",          "https://www.seriouseats.com/the-food-lab-apple-pie-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/apple-pie-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/apple-pie/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/apple-pie-recipe/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/apple-pie/"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/apple-pie/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/classic-apple-pie"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/classic-apple-pie/"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/apple-pie-recipe/"),
+    ],
+    "Lemon Meringue Pie": [
+        ("Serious Eats",          "https://www.seriouseats.com/lemon-meringue-pie-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/lemon-meringue-pie/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/lemon-meringue-pie-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/lemon-meringue-pie/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/lemon-meringue-pie/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/lemon-meringue-pie/"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/lemon-meringue-pie/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/lemon-meringue-pie"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/lemon-meringue-pie/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/LemonMeringuePie.html"),
+    ],
+    "Fruit Tart": [
+        ("Serious Eats",          "https://www.seriouseats.com/french-fruit-tart-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/fruit-tart/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/fruit-tart-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/fruit-tart/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/fruit-tart/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/fruit-tart/"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/fruit-tart/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/fruit-tart"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/FruitTart.html"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/fruit-tart"),
+    ],
+    "Chocolate Tart": [
+        ("Serious Eats",          "https://www.seriouseats.com/chocolate-tart-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/chocolate-tart/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/chocolate-tart/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/chocolate-tart-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/chocolate-tart/"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/chocolate-tart/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/chocolate-tart"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/chocolate-tart"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/ChocolateTart.html"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/chocolate-tart/"),
+    ],
+    "Tarte Tatin": [
+        ("Serious Eats",          "https://www.seriouseats.com/tarte-tatin-recipe"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/tarte-tatin"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/tarte-tatin-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/tarte-tatin/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/tarte-tatin/"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/tarte-tatin/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/tarte-tatin/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/tarte-tatin"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/TarteTatin.html"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/tarte-tatin/"),
+    ],
+
+    # ── CUSTARDS & SET DESSERTS ───────────────────────────────────────────────
+    "Creme Brulee": [
+        ("Serious Eats",          "https://www.seriouseats.com/the-best-classic-creme-brulee-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/creme-brulee/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/creme-brulee/"),
+        ("Handle the Heat",       "https://handletheheat.com/creme-brulee/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/creme-brulee-recipe"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/creme-brulee/"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/creme-brulee/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/classic-crme-brle"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/CremeBrulee.html"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/creme-brulee/"),
+    ],
+    "Panna Cotta": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/panna-cotta/"),
+        ("Serious Eats",          "https://www.seriouseats.com/vanilla-panna-cotta-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/panna-cotta/"),
+        ("Handle the Heat",       "https://handletheheat.com/panna-cotta/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/panna-cotta/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/panna-cotta/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/panna-cotta"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/panna-cotta-recipe"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/PannaCotta.html"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/panna-cotta/"),
+    ],
+    "Chocolate Mousse": [
+        ("Serious Eats",          "https://www.seriouseats.com/chocolate-mousse-recipe"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/chocolate-mousse/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/chocolate-mousse/"),
+        ("Handle the Heat",       "https://handletheheat.com/chocolate-mousse/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/chocolate-mousse/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/chocolate-mousse-recipe"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/chocolate-mousse"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/chocolate-mousse/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/ChocolateMousse.html"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/chocolate-mousse/"),
+    ],
+    "Bread Pudding": [
+        ("Serious Eats",          "https://www.seriouseats.com/bread-pudding-recipe"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/bread-pudding/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/bread-pudding/"),
+        ("Handle the Heat",       "https://handletheheat.com/bread-pudding/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/bread-pudding/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/bread-pudding-recipe"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/bread-butter-pudding"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/bread-pudding/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/bread-pudding/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/BreadPudding.html"),
+    ],
+
+    # ── VIENNOISERIE ─────────────────────────────────────────────────────────
+    "Croissant": [
+        ("Serious Eats",          "https://www.seriouseats.com/homemade-croissants-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/croissants-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/homemade-croissants/"),
+        ("Handle the Heat",       "https://handletheheat.com/croissants/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/croissants/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/croissants"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/croissants"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/croissant-recipe/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/Croissants.html"),
+        ("Bake from Scratch",     "https://www.bakefromscratch.com/croissants/"),
+    ],
+    "Brioche": [
+        ("Serious Eats",          "https://www.seriouseats.com/brioche-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/brioche-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/brioche-bread/"),
+        ("Handle the Heat",       "https://handletheheat.com/brioche/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/brioche/"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/brioche/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/brioche"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/brioche-recipe/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/brioche"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/brioche-recipe/"),
+    ],
+
+    # ── GLOBAL CLASSICS ───────────────────────────────────────────────────────
+    "Eclair": [
+        ("Serious Eats",          "https://www.seriouseats.com/chocolate-eclairs-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/eclairs-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/eclairs/"),
+        ("Handle the Heat",       "https://handletheheat.com/eclairs/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/eclairs/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/Eclairs.html"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/eclairs"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/eclairs/"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/eclairs/"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/eclair-recipe/"),
+    ],
+    "Mille-Feuille": [
+        ("Serious Eats",          "https://www.seriouseats.com/mille-feuille-recipe"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/mille-feuille-recipe"),
+        ("Handle the Heat",       "https://handletheheat.com/mille-feuille/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/mille-feuille/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/MilleFeuille.html"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/millefeuille"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/mille-feuille/"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/mille-feuille"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/mille-feuille-recipe/"),
+        ("Bake from Scratch",     "https://www.bakefromscratch.com/mille-feuille/"),
+    ],
+    "Cannoli": [
+        ("Serious Eats",          "https://www.seriouseats.com/cannoli-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/cannoli/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/cannoli/"),
+        ("Handle the Heat",       "https://handletheheat.com/cannoli/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/cannoli-recipe"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/cannoli"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/cannoli/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/cannoli-recipe/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/Cannoli.html"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/cannoli-recipe/"),
+    ],
+    "Matcha Roll Cake": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/matcha-roll-cake/"),
+        ("Handle the Heat",       "https://handletheheat.com/matcha-roll-cake/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/matcha-roll-cake/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/matcha-cake/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/matcha-roll-cake"),
+        ("Cloudy Kitchen",        "https://www.cloudykitchen.com/blog/matcha-roll-cake"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/matcha-cake"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/matcha-roll-cake/"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/matcha-cake/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/MatchaCake.html"),
+    ],
+    "Kunafa": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/kunafa/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/kunafa/"),
+        ("Handle the Heat",       "https://handletheheat.com/kunafa/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/kunafa"),
+        ("Bigger Bolder Baking",  "https://www.biggerbolderbaking.com/kunafa-recipe/"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/kunafa/"),
+        ("Serious Eats",          "https://www.seriouseats.com/kunafa-recipe"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/kunafa/"),
+        ("Sugar Geek Show",       "https://sugargeekshow.com/recipe/kunafa/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/Kunafa.html"),
+    ],
+    "Baklava": [
+        ("RecipeTin Eats",        "https://www.recipetineats.com/baklava/"),
+        ("Serious Eats",          "https://www.seriouseats.com/baklava-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/baklava/"),
+        ("Handle the Heat",       "https://handletheheat.com/baklava/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/baklava-recipe"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/baklava/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/baklava"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/baklava/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/baklava/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/Baklava.html"),
+    ],
+    "New York Cheesecake": [
+        ("Serious Eats",          "https://www.seriouseats.com/the-food-lab-new-york-cheesecake-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/new-york-cheesecake/"),
+        ("Handle the Heat",       "https://handletheheat.com/new-york-cheesecake/"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/cheesecake/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/new-york-style-cheesecake-recipe"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/best-cheesecake-recipe/"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/new-york-cheesecake/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/new-york-cheesecake"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/new-york-cheesecake/"),
+        ("Joy of Baking",         "https://www.joyofbaking.com/NewYorkCheesecake.html"),
+    ],
+    "Brownies": [
+        ("Serious Eats",          "https://www.seriouseats.com/the-best-brownies-recipe"),
+        ("Sally's Baking",        "https://sallysbakingaddiction.com/fudgy-brownies/"),
+        ("Handle the Heat",       "https://handletheheat.com/best-brownies/"),
+        ("King Arthur",           "https://www.kingarthurbaking.com/recipes/brownies-recipe"),
+        ("Preppy Kitchen",        "https://preppykitchen.com/brownies/"),
+        ("Sugar Spun Run",        "https://sugarspunrun.com/the-best-fudgy-brownies-recipe/"),
+        ("RecipeTin Eats",        "https://www.recipetineats.com/brownies/"),
+        ("BBC Good Food",         "https://www.bbcgoodfood.com/recipes/best-ever-brownies"),
+        ("Live Well Bake Often",  "https://www.livewellbakeoften.com/best-brownies-recipe/"),
+        ("Taste of Home",         "https://www.tasteofhome.com/recipes/best-fudgy-brownies/"),
+    ],
+}
+
+
 # ─── Database Setup ─────────────────────────────────────────────────────────────
 def init_db():
     conn = sqlite3.connect("baking_studio.db")
@@ -1811,37 +2469,55 @@ def page_recipe_finder():
             return None
 
     # ── Search button ──────────────────────────────────────────────────────────
-    if (st.button("🔍 Find & Extract Recipes from Google", use_container_width=True) or auto_search) and search_term:
+    if (st.button("🔍 Find & Extract Recipes", use_container_width=True) or auto_search) and search_term:
         st.session_state["finder_term"]      = search_term
         st.session_state["finder_extracted"] = []
         st.session_state["finder_compare"]   = {}
 
         progress = st.progress(0)
         status   = st.empty()
-        status.info("🌐 Searching Google for the top recipe pages...")
+        extracted = []
 
-        urls = get_google_recipe_urls(search_term, max_results=10)
+        # ── Check pre-set URL library first ──────────────────────────────
+        preset_key = None
+        for key in PRESET_RECIPE_URLS:
+            if key.lower() == search_term.lower() or key.lower() in search_term.lower() or search_term.lower() in key.lower():
+                preset_key = key
+                break
 
-        if not urls:
-            progress.empty()
-            status.warning("⚠️ Google search returned no results. This can happen if the server blocks automated requests. Try the **🔗 Import from URL** page and paste any recipe URL directly.")
-        else:
-            extracted = []
+        if preset_key:
+            urls = PRESET_RECIPE_URLS[preset_key]
+            status.info(f"📚 Found **{len(urls)}** pre-verified recipe sources for **{preset_key}** — extracting...")
             for i, (site_name, url) in enumerate(urls):
-                status.info(f"📥 Extracting recipe {i+1}/{len(urls)} from **{site_name}**...")
+                status.info(f"📥 Extracting from **{site_name}** ({i+1}/{len(urls)})...")
                 progress.progress((i+1) / len(urls))
                 result = scrape_recipe(site_name, url)
                 if result:
                     extracted.append(result)
-
-            progress.empty()
-            status.empty()
-            st.session_state["finder_extracted"] = extracted
-
-            if not extracted:
-                st.warning("⚠️ Found pages but couldn't extract structured recipe data. Those sites may use non-standard formats. Try **🔗 Import from URL** with a specific link.")
+        else:
+            # ── Fall back to Google scraping ──────────────────────────────
+            status.info("🌐 Not in pre-set library — searching Google...")
+            urls = get_google_recipe_urls(search_term, max_results=10)
+            if urls:
+                for i, (site_name, url) in enumerate(urls):
+                    status.info(f"📥 Extracting {i+1}/{len(urls)} from **{site_name}**...")
+                    progress.progress((i+1) / len(urls))
+                    result = scrape_recipe(site_name, url)
+                    if result:
+                        extracted.append(result)
             else:
-                st.success(f"✅ Extracted {len(extracted)} recipes!")
+                status.empty()
+                progress.empty()
+                st.warning("⚠️ Could not find recipes automatically. Try **🔗 Import from URL** and paste any recipe link directly.")
+
+        progress.empty()
+        status.empty()
+        st.session_state["finder_extracted"] = extracted
+
+        if extracted:
+            st.success(f"✅ Extracted {len(extracted)} recipes for **{search_term}**!")
+        elif preset_key:
+            st.warning("⚠️ Found URLs but couldn't extract recipe data — the sites may have changed. Try **🔗 Import from URL**.")
 
     # ── Display results ────────────────────────────────────────────────────────
     if st.session_state.get("finder_extracted"):
