@@ -1497,63 +1497,128 @@ def page_global_index():
 
 def page_full_index():
     st.markdown("<div class='section-header'>📖 Complete Baking Index</div>", unsafe_allow_html=True)
-    st.markdown("Your full reference guide — click any item to search for recipes and tutorials.")
+    st.markdown("Click **🔍 Find Recipes** on any item to instantly search for the top 10 real recipes from across the web — extracted and ready to compare inside the app!")
 
     FULL_INDEX = {
         "🫧 Cake Bases": {
-            "Foam / Air-Based": ["Genoise", "Sponge Cake", "Chiffon", "Angel Food", "Japanese Cotton Cheesecake", "Joconde", "Biscuit Roll", "Dacquoise", "Ladyfingers (Savoiardi)"],
-            "Butter-Based": ["Pound Cake", "Madeira Cake", "Butter Cake", "Victoria Sponge", "Marble Cake", "Tea Cakes", "Loaf Cakes", "Gateau Breton"],
-            "Oil-Based": ["Carrot Cake", "Olive Oil Cake", "Chocolate Oil Cake", "Red Velvet"],
-            "Chocolate & Rich": ["Mud Cake", "Devil's Food Cake", "Flourless Chocolate Cake", "Sachertorte", "Black Forest Base"],
+            "Foam / Air-Based": ["Genoise", "Sponge Cake", "Chiffon", "Angel Food",
+                "Japanese Cotton Cheesecake", "Joconde", "Swiss Roll", "Dacquoise",
+                "Ladyfingers (Savoiardi)"],
+            "Butter-Based": ["Pound Cake", "Madeira Cake", "Butter Cake", "Victoria Sponge",
+                "Marble Cake", "Tea Cake", "Loaf Cake", "Gateau Breton"],
+            "Oil-Based": ["Carrot Cake", "Olive Oil Cake", "Chocolate Oil Cake", "Red Velvet Cake"],
+            "Chocolate & Rich": ["Mud Cake", "Devil's Food Cake", "Flourless Chocolate Cake",
+                "Sachertorte", "Black Forest Cake"],
             "Nut-Based": ["Almond Cake", "Pistachio Cake", "Hazelnut Cake", "Walnut Cake"],
-            "Regional": ["Basbousa", "Tres Leches", "Castella", "Opera Cake", "Medovik", "Tiramisu Base"],
+            "Regional": ["Basbousa", "Tres Leches Cake", "Castella Cake", "Opera Cake",
+                "Medovik Honey Cake", "Tiramisu"],
         },
         "🥛 Fillings": {
-            "Fruit-Based": ["Compote", "Coulis", "Jam", "Lemon Curd", "Passionfruit Curd", "Fruit Reduction", "Confit"],
-            "Cream-Based": ["Whipped Cream", "Stabilized Cream", "Diplomat Cream", "Mousseline"],
-            "Custard-Based": ["Pastry Cream", "Crème Pâtissière", "Crème Anglaise", "Bavarian Cream", "Crémeux"],
-            "Chocolate-Based": ["Dark Ganache", "Whipped Ganache", "Chocolate Mousse", "Truffle Filling"],
-            "Nut-Based": ["Praline Paste", "Frangipane", "Pistachio Cream", "Peanut Butter Filling"],
-            "Caramel-Based": ["Salted Caramel", "Dulce de Leche", "Butterscotch"],
+            "Fruit-Based": ["Berry Compote", "Raspberry Coulis", "Strawberry Jam Filling",
+                "Lemon Curd", "Passionfruit Curd", "Fruit Reduction", "Cherry Confit"],
+            "Cream-Based": ["Whipped Cream", "Stabilized Whipped Cream", "Diplomat Cream",
+                "Mousseline Cream"],
+            "Custard-Based": ["Pastry Cream", "Creme Patissiere", "Creme Anglaise",
+                "Bavarian Cream", "Chocolate Cremeux"],
+            "Chocolate-Based": ["Dark Chocolate Ganache Filling", "Whipped Ganache",
+                "Chocolate Mousse Filling", "Chocolate Truffle Filling"],
+            "Nut-Based": ["Praline Paste", "Frangipane Almond Cream", "Pistachio Cream",
+                "Peanut Butter Filling"],
+            "Caramel-Based": ["Salted Caramel Sauce", "Dulce de Leche", "Butterscotch Sauce"],
         },
-        "🎂 Buttercreams": {
-            "Types": ["American", "Swiss Meringue", "Italian Meringue", "French", "German", "Ermine (Flour-based)", "Korean Glossy", "Cream Cheese", "Chocolate Buttercream"],
+        "🎂 Buttercreams & Frostings": {
+            "Buttercreams": ["American Buttercream", "Swiss Meringue Buttercream",
+                "Italian Meringue Buttercream", "French Buttercream", "German Buttercream",
+                "Ermine Buttercream", "Korean Glossy Buttercream", "Cream Cheese Frosting",
+                "Chocolate Buttercream"],
+            "Glazes & Frostings": ["Mirror Glaze Cake", "Neutral Glaze", "Chocolate Glaze",
+                "Caramel Glaze", "Fruit Glaze", "Royal Icing"],
         },
-        "🍫 Ganaches & Glazes": {
-            "Ganaches": ["Dark Chocolate", "Milk Chocolate", "White Chocolate", "Whipped Ganache", "Water Ganache", "Flavoured Ganache"],
-            "Glazes": ["Mirror Glaze", "Neutral Glaze", "Chocolate Glaze", "Caramel Glaze", "Fruit Glaze", "Royal Icing"],
+        "🍫 Ganaches": {
+            "Types": ["Dark Chocolate Ganache", "Milk Chocolate Ganache",
+                "White Chocolate Ganache", "Whipped Ganache", "Water Ganache",
+                "Flavoured Ganache"],
+        },
+        "🥐 Viennoiserie": {
+            "Laminated": ["Croissant", "Pain au Chocolat", "Kouign-Amann", "Danish Pastry"],
+            "Enriched": ["Brioche", "Panettone", "Babka"],
         },
         "🍪 Cookies & Biscuits": {
-            "Types": ["Shortbread", "Sugar Cookies", "Chocolate Chip", "Macarons", "Madeleines", "Biscotti", "Florentines", "Tuiles"],
+            "Classic": ["Shortbread Cookies", "Sugar Cookies", "Chocolate Chip Cookies",
+                "Oatmeal Cookies", "Peanut Butter Cookies"],
+            "French": ["French Macarons", "Madeleines", "Financiers", "Florentines", "Tuiles"],
+            "Italian": ["Biscotti", "Amaretti Cookies", "Pizzelle"],
         },
         "🥧 Pies & Tarts": {
-            "Pies": ["Apple Pie", "Pumpkin Pie", "Pecan Pie", "Key Lime Pie", "Banoffee Pie", "Lemon Meringue Pie"],
-            "Tarts": ["Fruit Tart", "Chocolate Tart", "Tarte Tatin", "Bakewell Tart", "Custard Tart"],
+            "Pies": ["Apple Pie", "Pumpkin Pie", "Pecan Pie", "Key Lime Pie",
+                "Banoffee Pie", "Lemon Meringue Pie", "Chocolate Pie"],
+            "Tarts": ["Fruit Tart", "Chocolate Tart", "Tarte Tatin", "Bakewell Tart",
+                "Custard Tart", "Treacle Tart"],
         },
         "🍮 Custards & Set Desserts": {
-            "Types": ["Crème Brûlée", "Flan", "Panna Cotta", "Bread Pudding", "Rice Pudding", "Clafoutis", "Posset"],
+            "Types": ["Creme Brulee", "Flan", "Panna Cotta", "Bread Pudding",
+                "Rice Pudding", "Clafoutis", "Posset", "Chocolate Pot de Creme"],
         },
-        "✨ Decorating Techniques": {
-            "Piping": ["Rosettes", "Swirls", "Ruffles", "Petals", "Stars", "Basketweave", "Rope border"],
-            "Sugar Work": ["Caramel Cage", "Spun Sugar", "Pulled Sugar", "Blown Sugar", "Isomalt Shards"],
-            "Chocolate": ["Tempering", "Shards & Curls", "Chocolate Drip", "Chocolate Flowers", "Spray"],
-            "Fondant": ["Draping", "Figures", "Embossing", "Ruffles"],
+        "🍰 Mousse & Entremet": {
+            "Types": ["Chocolate Mousse Cake", "Fruit Mousse Cake", "Mirror Glaze Entremet",
+                "Layered Mousse Cake", "Bavarois"],
+        },
+        "🌍 Global Classics": {
+            "French": ["Eclair", "Paris-Brest", "Mille-Feuille", "Canele Bordeaux",
+                "Profiteroles", "St Honore Cake"],
+            "Italian": ["Tiramisu", "Cannoli", "Panna Cotta", "Cassata", "Sfogliatelle"],
+            "Japanese": ["Matcha Roll Cake", "Japanese Cheesecake", "Mochi",
+                "Dorayaki", "Taiyaki"],
+            "Middle Eastern": ["Kunafa", "Baklava", "Basbousa", "Maamoul", "Umm Ali"],
+            "Indian": ["Rasmalai Cake", "Gulab Jamun Cheesecake", "Kheer", "Halwa"],
+            "American": ["New York Cheesecake", "Brownies", "Cupcakes",
+                "Banana Bread", "Red Velvet Cake"],
+            "Latin American": ["Tres Leches Cake", "Churros", "Alfajores",
+                "Brigadeiro", "Flan"],
+            "Eastern European": ["Medovik Honey Cake", "Sachertorte", "Dobos Torte",
+                "Baumkuchen", "Black Forest Cake"],
         },
     }
 
-    selected_section = st.selectbox("Jump to Section", list(FULL_INDEX.keys()))
-    st.write("")
-    section = FULL_INDEX[selected_section]
+    # ── Search bar at top ──────────────────────────────────────────────────────
+    search_filter = st.text_input("🔍 Filter items...", placeholder="e.g. chocolate, cream, tart...")
 
-    for subcat, items in section.items():
-        st.markdown(f"**{subcat}**")
-        cols = st.columns(3)
-        for i, item in enumerate(items):
-            with cols[i % 3]:
-                yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(item + ' recipe baking')}"
-                recipe_url = f"https://www.google.com/search?q={urllib.parse.quote(item + ' best recipe')}"
-                st.markdown(f"🔹 **{item}**<br><small>[Recipe]({recipe_url}) · [Video]({yt_url})</small>", unsafe_allow_html=True)
-        st.write("")
+    selected_section = st.selectbox("Jump to Section", ["All Sections"] + list(FULL_INDEX.keys()))
+    st.markdown("---")
+
+    sections_to_show = FULL_INDEX if selected_section == "All Sections" else {selected_section: FULL_INDEX[selected_section]}
+
+    total_items = 0
+    for section_name, section in sections_to_show.items():
+        section_items = []
+        for subcat, items in section.items():
+            filtered = [item for item in items if not search_filter or search_filter.lower() in item.lower()]
+            if filtered:
+                section_items.append((subcat, filtered))
+        if not section_items:
+            continue
+
+        st.markdown(f"### {section_name}")
+        for subcat, items in section_items:
+            st.markdown(f"**{subcat}**")
+            cols = st.columns(3)
+            for i, item in enumerate(items):
+                total_items += 1
+                with cols[i % 3]:
+                    yt_url  = f"https://www.youtube.com/results?search_query={urllib.parse.quote(item + ' recipe tutorial')}"
+                    st.markdown(
+                        f"<div style='background:#FFFDF8;border:1px solid #E8D5C0;border-radius:10px;"
+                        f"padding:10px 12px;margin:4px 0'>"
+                        f"<b style='color:#2C1A0E'>🔹 {item}</b><br>"
+                        f"<a href='{yt_url}' target='_blank' style='color:#888;font-size:0.8em'>▶️ YouTube</a>"
+                        f"</div>",
+                        unsafe_allow_html=True
+                    )
+                    if st.button(f"🔍 Find Recipes", key=f"idx_search_{total_items}_{i}"):
+                        st.session_state["nav_page"]      = "🔍 Recipe Finder & Compare"
+                        st.session_state["finder_search"] = item
+                        st.rerun()
+            st.write("")
 
 
 
@@ -1562,8 +1627,14 @@ def page_recipe_finder():
     st.markdown("<div class='section-header'>🔍 Recipe Finder & Comparator</div>", unsafe_allow_html=True)
     st.markdown("Type any dessert — the app searches Google, grabs the top 10 recipe links, and extracts ingredients & steps directly inside the app.")
 
+    # Auto-populate if navigated from Full Baking Index
+    prefill = st.session_state.pop("finder_search", "")
     search_term = st.text_input("🔍 What do you want to bake?",
+                                 value=prefill,
                                  placeholder="e.g. tiramisu, black forest cake, crème brûlée...")
+
+    # Auto-trigger search if coming from index click
+    auto_search = bool(prefill)
 
     def get_google_recipe_urls(term, max_results=10):
         """Scrape Google search results for recipe URLs, skipping ads and non-recipe pages."""
@@ -1740,7 +1811,7 @@ def page_recipe_finder():
             return None
 
     # ── Search button ──────────────────────────────────────────────────────────
-    if st.button("🔍 Find & Extract Recipes from Google", use_container_width=True) and search_term:
+    if (st.button("🔍 Find & Extract Recipes from Google", use_container_width=True) or auto_search) and search_term:
         st.session_state["finder_term"]      = search_term
         st.session_state["finder_extracted"] = []
         st.session_state["finder_compare"]   = {}
