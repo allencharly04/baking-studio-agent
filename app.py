@@ -1560,75 +1560,100 @@ def page_full_index():
 # ─── Recipe Finder ────────────────────────────────────────────────────────────
 def page_recipe_finder():
     st.markdown("<div class='section-header'>🔍 Recipe Finder & Comparator</div>", unsafe_allow_html=True)
-    st.markdown("Type any dessert — the app finds and extracts real recipes from top baking sites directly inside the app.")
+    st.markdown("Type any dessert — the app searches Google, grabs the top 10 recipe links, and extracts ingredients & steps directly inside the app.")
 
     search_term = st.text_input("🔍 What do you want to bake?",
-                                 placeholder="e.g. black forest cake, tiramisu, crème brûlée...")
+                                 placeholder="e.g. tiramisu, black forest cake, crème brûlée...")
 
-    # These sites have reliable JSON-LD recipe data
-    TRUSTED_SITES = [
-        "recipetineats.com",
-        "sallysbakingaddiction.com",
-        "preppykitchen.com",
-        "handletheheat.com",
-        "seriouseats.com",
-        "bbcgoodfood.com",
-        "sugarspunrun.com",
-        "kingarthurbaking.com",
-        "tasteofhome.com",
-        "cloudykitchen.com",
-        "joyfoodsunshine.com",
-        "livewellbakeoften.com",
-    ]
-
-    def google_search_recipe_urls(term, sites, max_results=10):
-        """Use Google to find direct recipe page URLs for a given term on specific sites."""
-        found_urls = []
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
-
-        for site in sites:
-            if len(found_urls) >= max_results:
-                break
-            try:
-                # Google site-specific search
-                query = urllib.parse.quote(f'{term} recipe site:{site}')
-                google_url = f"https://www.google.com/search?q={query}&num=3"
-                resp = requests.get(google_url, headers=headers, timeout=10)
-                soup = BeautifulSoup(resp.text, "html.parser")
-
-                for a in soup.find_all("a", href=True):
-                    href = a["href"]
-                    # Google wraps URLs in /url?q=
-                    if "/url?q=" in href:
-                        actual = href.split("/url?q=")[1].split("&")[0]
-                        actual = urllib.parse.unquote(actual)
-                        if site in actual and "http" in actual:
-                            # Filter out category/search/tag pages
-                            skip_patterns = [
-                                "?s=", "/search", "/category/", "/tag/",
-                                "/page/", "/author/", "#", "google.com",
-                                "youtube.com", "/feed", "wp-json"
-                            ]
-                            if not any(p in actual for p in skip_patterns):
-                                # Must have a meaningful slug
-                                path_parts = actual.rstrip("/").split("/")
-                                if path_parts and len(path_parts[-1]) > 8:
-                                    if actual not in found_urls:
-                                        found_urls.append((site, actual))
-                                        break
-            except Exception:
-                continue
-
-        return found_urls
-
-    def scrape_recipe(url, site_name):
-        """Extract full recipe from a URL using JSON-LD first."""
+    def get_google_recipe_urls(term, max_results=10):
+        """Scrape Google search results for recipe URLs, skipping ads and non-recipe pages."""
         try:
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
-            resp = requests.get(url, headers=headers, timeout=12)
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept-Encoding": "gzip, deflate, br",
+                "DNT": "1",
+                "Connection": "keep-alive",
+            }
+            query = urllib.parse.quote(f"{term} recipe")
+            url   = f"https://www.google.com/search?q={query}&num=20&hl=en"
+            resp  = requests.get(url, headers=headers, timeout=12)
+            soup  = BeautifulSoup(resp.text, "html.parser")
+
+            # Domains to always skip (ads, aggregators, social, video)
+            SKIP_DOMAINS = [
+                "google.com", "youtube.com", "instagram.com", "facebook.com",
+                "pinterest.com", "twitter.com", "tiktok.com", "amazon.com",
+                "walmart.com", "ebay.com", "reddit.com", "quora.com",
+                "wikipedia.org", "wikihow.com", "healthline.com", "webmd.com",
+            ]
+            # Words in URL path that indicate non-recipe pages
+            SKIP_PATH = [
+                "/search", "/category/", "/tag/", "/page/", "/author/",
+                "?s=", "#", "/feed", "/shop", "/about", "/contact",
+                "/collection", "/collections", "/product",
+            ]
+
+            found = []
+            seen  = set()
+
+            # Google wraps organic results in <a href="/url?q=ACTUAL_URL&...">
+            for a in soup.find_all("a", href=True):
+                href = a["href"]
+
+                # Only care about /url?q= links (Google's result wrapper)
+                if "/url?q=" not in href:
+                    continue
+
+                actual = href.split("/url?q=")[1].split("&")[0]
+                actual = urllib.parse.unquote(actual)
+
+                if not actual.startswith("http"):
+                    continue
+                if actual in seen:
+                    continue
+
+                # Skip unwanted domains
+                domain = actual.split("/")[2].lower()
+                if any(skip in domain for skip in SKIP_DOMAINS):
+                    continue
+
+                # Skip non-recipe paths
+                if any(p in actual for p in SKIP_PATH):
+                    continue
+
+                # Must look like a real page (has a slug)
+                path_parts = actual.rstrip("/").split("/")
+                if len(path_parts) < 4:  # needs at least domain + 1 path segment
+                    continue
+
+                seen.add(actual)
+                # Extract site name from domain
+                site = domain.replace("www.","").replace(".com","").replace(".co.uk","").replace(".au","")
+                site = site.replace("-"," ").replace("."," ").title()
+                found.append((site, actual))
+
+                if len(found) >= max_results:
+                    break
+
+            return found
+
+        except Exception as e:
+            return []
+
+    def scrape_recipe(site_name, url):
+        """Extract full recipe from a URL using JSON-LD schema."""
+        try:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+            resp = requests.get(url, headers=headers, timeout=12, allow_redirects=True)
+            if resp.status_code != 200:
+                return None
             soup = BeautifulSoup(resp.text, "html.parser")
 
-            # ── JSON-LD (most reliable) ────────────────────────────────────
+            # ── JSON-LD (most reliable across all sites) ───────────────────
             for script in soup.find_all("script", type="application/ld+json"):
                 try:
                     raw = script.string
@@ -1638,31 +1663,32 @@ def page_recipe_finder():
                     if not isinstance(items, list): items = [items]
 
                     for item in items:
-                        rtype = item.get("@type", "")
+                        rtype = item.get("@type","")
                         if isinstance(rtype, list): rtype = " ".join(rtype)
                         if "Recipe" not in rtype: continue
 
-                        name = item.get("name", "")
-                        desc = item.get("description", "")
+                        name = item.get("name","") or site_name
+                        desc = item.get("description","")
 
                         # Ingredients
-                        raw_ingr = item.get("recipeIngredient", [])
+                        raw_ingr = item.get("recipeIngredient",[])
                         ingredients = "\n".join(
-                            re.sub(r'\s+', ' ', i).strip()
-                            for i in raw_ingr if isinstance(i, str) and i.strip()
+                            re.sub(r'\s+',' ', i).strip()
+                            for i in raw_ingr if isinstance(i,str) and i.strip()
                         )
+                        if not ingredients: continue  # not a real recipe page
 
                         # Instructions
-                        instructions = item.get("recipeInstructions", [])
-                        steps_lines = []
-                        step_num = 1
+                        instructions = item.get("recipeInstructions",[])
+                        steps_lines  = []
+                        step_num     = 1
                         if isinstance(instructions, str):
-                            steps_lines = [BeautifulSoup(instructions, "html.parser").get_text().strip()]
+                            steps_lines = [BeautifulSoup(instructions,"html.parser").get_text().strip()]
                         elif isinstance(instructions, list):
                             for step in instructions:
                                 if isinstance(step, dict):
                                     if step.get("@type") == "HowToSection":
-                                        for sub in step.get("itemListElement", []):
+                                        for sub in step.get("itemListElement",[]):
                                             txt = sub.get("text","").strip() if isinstance(sub,dict) else str(sub)
                                             txt = BeautifulSoup(txt,"html.parser").get_text().strip()
                                             if txt:
@@ -1674,97 +1700,96 @@ def page_recipe_finder():
                                         if txt:
                                             steps_lines.append(f"Step {step_num}: {txt}")
                                             step_num += 1
-                                elif isinstance(step, str) and step.strip():
+                                elif isinstance(step,str) and step.strip():
                                     steps_lines.append(f"Step {step_num}: {step.strip()}")
                                     step_num += 1
 
-                        steps = "\n".join(steps_lines)
-
                         # Thumbnail
                         thumb = ""
-                        img = item.get("image", "")
-                        if isinstance(img, str): thumb = img
+                        img = item.get("image","")
+                        if isinstance(img, str):   thumb = img
                         elif isinstance(img, list) and img:
                             first = img[0]
-                            thumb = first.get("url", first) if isinstance(first, dict) else str(first)
-                        elif isinstance(img, dict): thumb = img.get("url", "")
-
-                        # Extra metadata
-                        prep_time = item.get("prepTime", "")
-                        cook_time = item.get("cookTime", "")
-                        servings  = item.get("recipeYield", "")
-
-                        # og:image fallback
+                            thumb = first.get("url", str(first)) if isinstance(first,dict) else str(first)
+                        elif isinstance(img, dict): thumb = img.get("url","")
                         if not thumb:
                             og = soup.find("meta", property="og:image")
-                            if og: thumb = og.get("content", "")
+                            if og: thumb = og.get("content","")
 
-                        if name and ingredients:
-                            return {
-                                "name": name, "description": desc,
-                                "ingredients": ingredients, "steps": steps,
-                                "thumbnail_url": thumb, "source_url": url,
-                                "site_name": site_name,
-                                "prep_time": prep_time, "cook_time": cook_time,
-                                "servings": servings, "success": True
-                            }
+                        def fmt_time(t):
+                            if not t: return ""
+                            return t.replace("PT","").replace("H"," hr ").replace("M"," min").strip()
+
+                        return {
+                            "name":         name,
+                            "description":  desc,
+                            "ingredients":  ingredients,
+                            "steps":        "\n".join(steps_lines),
+                            "thumbnail_url":thumb,
+                            "source_url":   resp.url,
+                            "site_name":    site_name,
+                            "prep_time":    fmt_time(item.get("prepTime","")),
+                            "cook_time":    fmt_time(item.get("cookTime","")),
+                            "servings":     str(item.get("recipeYield","")),
+                            "success":      True,
+                        }
                 except Exception:
                     continue
+            return None  # page exists but has no recipe schema
+        except Exception:
+            return None
 
-            return {"success": False, "site_name": site_name, "source_url": url}
-
-        except Exception as e:
-            return {"success": False, "site_name": site_name, "source_url": url, "error": str(e)}
-
-    # ── Search button ────────────────────────────────────────────────────────
-    if st.button("🔍 Find & Extract Recipes", use_container_width=True) and search_term:
-        st.session_state["finder_term"] = search_term
+    # ── Search button ──────────────────────────────────────────────────────────
+    if st.button("🔍 Find & Extract Recipes from Google", use_container_width=True) and search_term:
+        st.session_state["finder_term"]      = search_term
         st.session_state["finder_extracted"] = []
-        st.session_state["finder_compare"] = {}
+        st.session_state["finder_compare"]   = {}
 
-        progress_bar = st.progress(0)
-        status_box   = st.empty()
+        progress = st.progress(0)
+        status   = st.empty()
+        status.info("🌐 Searching Google for the top recipe pages...")
 
-        status_box.info("🔎 Searching Google for top recipe pages...")
-        found_urls = google_search_recipe_urls(search_term, TRUSTED_SITES, max_results=10)
+        urls = get_google_recipe_urls(search_term, max_results=10)
 
-        extracted = []
-        for i, (site, url) in enumerate(found_urls):
-            site_label = site.replace(".com","").replace("www.","").replace("-"," ").title()
-            status_box.info(f"📥 Extracting recipe from **{site_label}** ({i+1}/{len(found_urls)})...")
-            progress_bar.progress((i + 1) / max(len(found_urls), 1))
+        if not urls:
+            progress.empty()
+            status.warning("⚠️ Google search returned no results. This can happen if the server blocks automated requests. Try the **🔗 Import from URL** page and paste any recipe URL directly.")
+        else:
+            extracted = []
+            for i, (site_name, url) in enumerate(urls):
+                status.info(f"📥 Extracting recipe {i+1}/{len(urls)} from **{site_name}**...")
+                progress.progress((i+1) / len(urls))
+                result = scrape_recipe(site_name, url)
+                if result:
+                    extracted.append(result)
 
-            result = scrape_recipe(url, site_label)
-            if result["success"]:
-                extracted.append(result)
+            progress.empty()
+            status.empty()
+            st.session_state["finder_extracted"] = extracted
 
-        progress_bar.empty()
-        status_box.empty()
-        st.session_state["finder_extracted"] = extracted
+            if not extracted:
+                st.warning("⚠️ Found pages but couldn't extract structured recipe data. Those sites may use non-standard formats. Try **🔗 Import from URL** with a specific link.")
+            else:
+                st.success(f"✅ Extracted {len(extracted)} recipes!")
 
-        if not extracted:
-            st.warning("⚠️ Could not extract recipes automatically. Try the manual URL import instead — go to 🔗 Import from URL and paste any recipe link.")
-
-    # ── Display results ───────────────────────────────────────────────────────
+    # ── Display results ────────────────────────────────────────────────────────
     if st.session_state.get("finder_extracted"):
         term    = st.session_state["finder_term"]
         recipes = st.session_state["finder_extracted"]
 
-        st.markdown(f"### 🍰 Found **{len(recipes)}** recipes for: *{term}*")
-
-        tab_labels = [f"#{i+1} {r['site_name']}" for i, r in enumerate(recipes)]
-        tabs = st.tabs(tab_labels)
+        st.markdown(f"### 🍰 **{len(recipes)} recipes** found for: *{term}*")
+        tab_labels   = [f"#{i+1} {r['site_name']}" for i, r in enumerate(recipes)]
+        tabs         = st.tabs(tab_labels)
         compare_data = st.session_state.get("finder_compare", {})
 
         for i, (tab, r) in enumerate(zip(tabs, recipes)):
             with tab:
-                # Header
                 hc1, hc2 = st.columns([1, 3])
                 with hc1:
                     if r.get("thumbnail_url"):
                         st.markdown(
                             f'<img src="{r["thumbnail_url"]}" style="width:100%;border-radius:12px;'
-                            f'max-height:180px;object-fit:cover" onerror="this.style.display=\'none\'">',
+                            f'max-height:200px;object-fit:cover" onerror="this.style.display=\'none\'">',
                             unsafe_allow_html=True)
                     else:
                         st.markdown("<div style='background:#F2C4B0;border-radius:12px;height:140px;"
@@ -1773,20 +1798,17 @@ def page_recipe_finder():
                 with hc2:
                     st.markdown(f"### {r['name']}")
                     if r.get("description"):
-                        st.markdown(f"<small style='color:#555'>{r['description'][:220]}</small>",
+                        st.markdown(f"<small style='color:#555'>{r['description'][:260]}</small>",
                                     unsafe_allow_html=True)
-                    # Meta row
                     meta = []
-                    if r.get("prep_time"): meta.append(f"⏱ Prep: {r['prep_time'].replace('PT','').replace('M',' min').replace('H',' hr')}")
-                    if r.get("cook_time"): meta.append(f"🔥 Cook: {r['cook_time'].replace('PT','').replace('M',' min').replace('H',' hr')}")
+                    if r.get("prep_time"): meta.append(f"⏱ Prep: {r['prep_time']}")
+                    if r.get("cook_time"): meta.append(f"🔥 Cook: {r['cook_time']}")
                     if r.get("servings"):  meta.append(f"👥 Serves: {r['servings']}")
                     if meta: st.markdown("  ·  ".join(meta))
                     st.markdown(f"[📖 View on {r['site_name']}]({r['source_url']})")
                     mc1, mc2 = st.columns(2)
-                    ingr_count  = len([l for l in r['ingredients'].split('\n') if l.strip()])
-                    steps_count = len([l for l in r['steps'].split('\n') if l.strip()])
-                    mc1.metric("Ingredients", ingr_count)
-                    mc2.metric("Steps", steps_count)
+                    mc1.metric("Ingredients", len([l for l in r['ingredients'].split('\n') if l.strip()]))
+                    mc2.metric("Steps",       len([l for l in r['steps'].split('\n') if l.strip()]))
 
                 st.markdown("---")
                 c1, c2 = st.columns(2)
@@ -1806,48 +1828,40 @@ def page_recipe_finder():
                 bc1, bc2, bc3 = st.columns(3)
                 with bc1:
                     if st.button("💾 Save to Library", key=f"save_f_{i}"):
-                        guessed_cat, guessed_sub = auto_categorise(
-                            r['name'], r.get('description',''), r['ingredients'])
+                        cat, sub = auto_categorise(r['name'], r.get('description',''), r['ingredients'])
                         save_recipe({
-                            "name": r['name'],
-                            "category": guessed_cat, "subcategory": guessed_sub,
+                            "name": r['name'], "category": cat, "subcategory": sub,
                             "description": r.get("description",""),
                             "ingredients": r['ingredients'], "steps": r['steps'],
                             "sweetness":5,"tartness":3,"richness":5,
                             "bitterness":2,"nuttiness":2,"floral":1,
-                            "source_url": r['source_url'],
-                            "video_url":"","instagram_url":"",
-                            "region":"","difficulty":"Medium",
-                            "tags": term, "notes":"",
+                            "source_url": r['source_url'], "video_url":"","instagram_url":"",
+                            "region":"","difficulty":"Medium","tags":term,"notes":"",
                             "thumbnail_url": r.get("thumbnail_url","")
                         })
                         st.success("✅ Saved to your Recipe Library!")
-
                 with bc2:
-                    in_compare = compare_data.get(i, False)
-                    label = "✅ In Comparator" if in_compare else "⚖️ Add to Compare"
-                    if st.button(label, key=f"cmp_f_{i}"):
-                        compare_data[i] = not in_compare
+                    in_cmp = compare_data.get(i, False)
+                    if st.button("✅ In Comparator" if in_cmp else "⚖️ Add to Compare", key=f"cmp_f_{i}"):
+                        compare_data[i] = not in_cmp
                         st.session_state["finder_compare"] = compare_data
                         st.rerun()
-
                 with bc3:
-                    dl_text = (f"Recipe: {r['name']}\nSource: {r['source_url']}\n\n"
-                               f"INGREDIENTS:\n{r['ingredients']}\n\nSTEPS:\n{r['steps']}")
-                    st.download_button("📥 Download .txt", data=dl_text,
+                    dl = (f"Recipe: {r['name']}\nSource: {r['source_url']}\n\n"
+                          f"INGREDIENTS:\n{r['ingredients']}\n\nSTEPS:\n{r['steps']}")
+                    st.download_button("📥 Download", data=dl,
                                        file_name=f"{r['name'].replace(' ','_')}.txt",
                                        mime="text/plain", key=f"dl_f_{i}")
 
-        # ── Side-by-side comparator ──────────────────────────────────────────
-        compare_data   = st.session_state.get("finder_compare", {})
-        selected_idxs  = [i for i, v in compare_data.items() if v]
+        # ── Comparator ─────────────────────────────────────────────────────────
+        compare_data = st.session_state.get("finder_compare", {})
+        sel_idxs     = [i for i,v in compare_data.items() if v]
 
-        if len(selected_idxs) >= 2:
+        if len(sel_idxs) >= 2:
             st.markdown("---")
             st.markdown("### ⚖️ Side-by-Side Comparison")
-            sel = [recipes[i] for i in selected_idxs if i < len(recipes)]
+            sel = [recipes[i] for i in sel_idxs if i < len(recipes)]
 
-            # Thumbnails + stats header
             hcols = st.columns(len(sel))
             for j, r in enumerate(sel):
                 with hcols[j]:
@@ -1855,14 +1869,11 @@ def page_recipe_finder():
                         st.markdown(f'<img src="{r["thumbnail_url"]}" style="width:100%;border-radius:8px;height:110px;object-fit:cover">',
                                     unsafe_allow_html=True)
                     st.markdown(f"**{r['site_name']}**")
-                    ingr_c  = len([l for l in r['ingredients'].split('\n') if l.strip()])
-                    steps_c = len([l for l in r['steps'].split('\n') if l.strip()])
-                    st.metric("Ingredients", ingr_c)
-                    st.metric("Steps", steps_c)
+                    st.metric("Ingredients", len([l for l in r['ingredients'].split('\n') if l.strip()]))
+                    st.metric("Steps",       len([l for l in r['steps'].split('\n') if l.strip()]))
                     st.markdown(f"[📖 Source]({r['source_url']})")
 
-            # Ingredients side by side
-            st.markdown("**🧂 Ingredients:**")
+            st.markdown("**🧂 Ingredients side by side:**")
             icols = st.columns(len(sel))
             for j, r in enumerate(sel):
                 with icols[j]:
@@ -1871,8 +1882,7 @@ def page_recipe_finder():
                         if line.strip():
                             st.markdown(f"<small>• {line.strip()}</small>", unsafe_allow_html=True)
 
-            # Steps side by side
-            st.markdown("**📋 Steps:**")
+            st.markdown("**📋 Steps side by side:**")
             scols = st.columns(len(sel))
             for j, r in enumerate(sel):
                 with scols[j]:
@@ -1882,18 +1892,17 @@ def page_recipe_finder():
                             st.markdown(f"<small style='color:#2C1A0E'>{line.strip()}</small>",
                                         unsafe_allow_html=True)
 
-            # Verdict
             st.markdown("---")
             st.markdown("### 🏆 Quick Verdict")
             simplest    = min(sel, key=lambda r: len([l for l in r['ingredients'].split('\n') if l.strip()]))
             most_detail = max(sel, key=lambda r: len([l for l in r['steps'].split('\n') if l.strip()]))
             quickest    = min(sel, key=lambda r: len([l for l in r['steps'].split('\n') if l.strip()]))
-            st.success(f"🥇 **Fewest ingredients** (easiest to shop for): **{simplest['site_name']}**")
-            st.info(f"📋 **Most detailed instructions**: **{most_detail['site_name']}**")
-            st.info(f"⚡ **Fewest steps** (quickest method): **{quickest['site_name']}**")
+            st.success(f"🥇 **Fewest ingredients**: **{simplest['site_name']}**")
+            st.info(f"📋 **Most detailed steps**: **{most_detail['site_name']}**")
+            st.info(f"⚡ **Quickest method**: **{quickest['site_name']}**")
 
-        elif len(selected_idxs) == 1:
-            st.info("⚖️ Select at least one more recipe tab and click **'Add to Compare'** to compare recipes side by side.")
+        elif len(sel_idxs) == 1:
+            st.info("⚖️ Click **'Add to Compare'** in at least one more tab to compare side by side.")
 
 
 
