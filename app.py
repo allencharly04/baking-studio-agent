@@ -580,25 +580,37 @@ def render_recipe_card(row, show_delete=False):
     except Exception:
         thumb  = ""
 
-    # ── Compact card with thumbnail ──────────────────────────────────────
-    thumb_col, info_col = st.columns([1, 4])
-    with thumb_col:
-        if thumb:
-            st.markdown(f"""<img src="{thumb}" style="width:100%;border-radius:12px;
-                object-fit:cover;height:90px;" onerror="this.style.display='none'">""",
-                unsafe_allow_html=True)
-        else:
-            st.markdown("<div style='background:#F2C4B0;border-radius:12px;height:90px;"
-                        "display:flex;align-items:center;justify-content:center;"
-                        "font-size:2em'>🎂</div>", unsafe_allow_html=True)
-    with info_col:
-        st.markdown(f"**{name}**  <span style='color:#888;font-size:0.85em'>— {subcat} | ⚙️ {difficulty}</span>",
-                    unsafe_allow_html=True)
-        if desc:
-            st.markdown(f"<small style='color:#666'>{desc[:120]}{'...' if len(desc)>120 else ''}</small>",
-                        unsafe_allow_html=True)
+    # ── Fully clickable card row ────────────────────────────────────────
+    expanded_key = f"expanded_{rec_id}"
+    if expanded_key not in st.session_state:
+        st.session_state[expanded_key] = False
 
-    with st.expander("📖 View full recipe  |  🤖 Tweak with AI", expanded=False):
+    # Clickable card row
+    card_html = f"""
+    <div style='display:flex;align-items:center;gap:16px;background:#FFFDF8;
+         border:1px solid #E8D5C0;border-radius:16px;padding:12px 16px;
+         margin:8px 0;cursor:pointer;box-shadow:0 2px 8px rgba(107,63,42,0.08)'>
+        <div style='flex-shrink:0;width:90px;height:90px;border-radius:12px;overflow:hidden;
+             background:#F2C4B0;display:flex;align-items:center;justify-content:center;font-size:2em'>
+            {'<img src="'+thumb+'" style="width:100%;height:100%;object-fit:cover">' if thumb else '🎂'}
+        </div>
+        <div style='flex:1;min-width:0'>
+            <div style='font-weight:700;font-size:1.05em;color:#2C1A0E'>{name}</div>
+            <div style='color:#888;font-size:0.85em;margin:2px 0'>{subcat} {'· '+difficulty if difficulty else ''}</div>
+            <div style='color:#666;font-size:0.85em;margin-top:4px;overflow:hidden;
+                 text-overflow:ellipsis;white-space:nowrap'>{desc[:130]+'...' if len(desc)>130 else desc}</div>
+        </div>
+        <div style='color:#C87941;font-size:1.2em'>{'▼' if st.session_state[expanded_key] else '▶'}</div>
+    </div>
+    """
+    st.markdown(card_html, unsafe_allow_html=True)
+    if st.button(f"{'▼ Collapse' if st.session_state[expanded_key] else '▶ Open Recipe & Tweak'}",
+                 key=f"toggle_{rec_id}", use_container_width=True):
+        st.session_state[expanded_key] = not st.session_state[expanded_key]
+        st.rerun()
+
+    if st.session_state[expanded_key]:
+        st.markdown("<div style='background:#FFFDF8;border:1px solid #E8D5C0;border-radius:12px;padding:16px;margin-top:4px'>", unsafe_allow_html=True)
         col1, col2 = st.columns([3, 2])
         with col1:
             if tags:
@@ -623,7 +635,6 @@ def render_recipe_card(row, show_delete=False):
             if links:
                 st.write("")
                 st.markdown("  |  ".join(links))
-
         with col2:
             st.markdown("**Flavor Profile**")
             render_flavor_bars(row)
@@ -864,6 +875,122 @@ def render_recipe_card(row, show_delete=False):
                                file_name=f"{name}_tweaked_{new_servings}servings.txt",
                                mime="text/plain",
                                key=f"dl_{rec_id}")
+
+        # ── Tin Size Calculator ───────────────────────────────────────────
+        st.markdown("---")
+        st.markdown("### 🍰 Tin Size Calculator")
+        st.caption("Convert this recipe to a different tin size or shape automatically.")
+
+        tin1, tin2, tin3 = st.columns(3)
+        SHAPES = ["Round", "Square", "Rectangular", "Loaf", "Bundt/Ring"]
+        with tin1:
+            orig_shape = st.selectbox("Original tin shape", SHAPES, key=f"osh_{rec_id}")
+            if orig_shape == "Rectangular":
+                o_w = st.number_input("Original width (cm)", value=20, min_value=5, max_value=60, key=f"ow_{rec_id}")
+                o_l = st.number_input("Original length (cm)", value=30, min_value=5, max_value=60, key=f"ol_{rec_id}")
+                orig_area = o_w * o_l
+            elif orig_shape == "Square":
+                o_s = st.number_input("Original side (cm)", value=20, min_value=5, max_value=60, key=f"os_{rec_id}")
+                orig_area = o_s * o_s
+            elif orig_shape == "Loaf":
+                o_w = st.number_input("Original width (cm)", value=11, min_value=5, max_value=40, key=f"ow_{rec_id}")
+                o_l = st.number_input("Original length (cm)", value=21, min_value=5, max_value=60, key=f"ol_{rec_id}")
+                orig_area = o_w * o_l
+            else:  # Round or Bundt
+                o_d = st.number_input("Original diameter (cm)", value=20, min_value=5, max_value=60, key=f"od_{rec_id}")
+                import math
+                orig_area = math.pi * (o_d/2)**2
+
+        with tin2:
+            new_shape = st.selectbox("New tin shape", SHAPES, key=f"nsh_{rec_id}")
+            if new_shape == "Rectangular":
+                n_w = st.number_input("New width (cm)", value=23, min_value=5, max_value=60, key=f"nw_{rec_id}")
+                n_l = st.number_input("New length (cm)", value=33, min_value=5, max_value=60, key=f"nl_{rec_id}")
+                new_area = n_w * n_l
+            elif new_shape == "Square":
+                n_s = st.number_input("New side (cm)", value=23, min_value=5, max_value=60, key=f"ns_{rec_id}")
+                new_area = n_s * n_s
+            elif new_shape == "Loaf":
+                n_w = st.number_input("New width (cm)", value=13, min_value=5, max_value=40, key=f"nw_{rec_id}")
+                n_l = st.number_input("New length (cm)", value=23, min_value=5, max_value=60, key=f"nl_{rec_id}")
+                new_area = n_w * n_l
+            else:
+                import math
+                n_d = st.number_input("New diameter (cm)", value=23, min_value=5, max_value=60, key=f"nd_{rec_id}")
+                new_area = math.pi * (n_d/2)**2
+
+        with tin3:
+            st.write("")
+            tin_scale = new_area / orig_area if orig_area > 0 else 1.0
+            st.metric("Scale factor", f"×{tin_scale:.2f}")
+            depth_adj = st.checkbox("Adjust for depth too?", key=f"dep_{rec_id}")
+            if depth_adj:
+                orig_depth = st.number_input("Original depth (cm)", value=5.0, min_value=1.0, max_value=20.0, step=0.5, key=f"odp_{rec_id}")
+                new_depth  = st.number_input("New depth (cm)",      value=5.0, min_value=1.0, max_value=20.0, step=0.5, key=f"ndp_{rec_id}")
+                tin_scale  = tin_scale * (new_depth / orig_depth)
+                st.metric("Final scale (area+depth)", f"×{tin_scale:.2f}")
+
+        if st.button("🍰 Convert to New Tin Size", key=f"tin_{rec_id}", use_container_width=True):
+            import math, re as _re
+            def _parse_qty(text):
+                frac = _re.match(r'^(\d+)\s*/\s*(\d+)', text.strip())
+                if frac: return float(frac.group(1))/float(frac.group(2)), text[frac.end():]
+                mixed = _re.match(r'^(\d+)\s+(\d+)\s*/\s*(\d+)', text.strip())
+                if mixed:
+                    return int(mixed.group(1))+int(mixed.group(2))/int(mixed.group(3)), text[mixed.end():]
+                num = _re.match(r'^(\d+\.?\d*)', text.strip())
+                if num: return float(num.group(1)), text[num.end():]
+                return None, text
+
+            def _fmt(v):
+                if v == int(v): return str(int(v))
+                for n,d,l in [(1,4,"¼"),(1,3,"⅓"),(1,2,"½"),(2,3,"⅔"),(3,4,"¾")]:
+                    if abs(v-n/d)<0.05: return l
+                for w in range(1,20):
+                    for n,d,l in [(1,4,"¼"),(1,3,"⅓"),(1,2,"½"),(2,3,"⅔"),(3,4,"¾")]:
+                        if abs(v-(w+n/d))<0.05: return f"{w} {l}"
+                return f"{v:.1f}".rstrip('0').rstrip('.')
+
+            # Time/temp adjustments
+            time_note = ""
+            temp_note = ""
+            if tin_scale > 1.3:
+                time_note = f"⏱️ **Baking time:** Increase by ~{int((tin_scale-1)*15)}-{int((tin_scale-1)*25)} minutes. Check with skewer."
+                temp_note = "🌡️ **Temperature:** Reduce by 10-15°C if baking in a deeper/larger tin to avoid burning edges."
+            elif tin_scale < 0.7:
+                time_note = f"⏱️ **Baking time:** Reduce by ~{int((1-tin_scale)*15)}-{int((1-tin_scale)*20)} minutes. Check early!"
+                temp_note = "🌡️ **Temperature:** You can increase by 5-10°C for smaller/shallower tins."
+
+            st.markdown(f"### 🍰 Converted Recipe — {new_shape} tin")
+            st.markdown(f"*Scale factor: ×{tin_scale:.2f} (original area: {orig_area:.0f}cm² → new area: {new_area:.0f}cm²)*")
+            if time_note: st.info(time_note)
+            if temp_note: st.warning(temp_note)
+
+            tin_result = f"TIN CONVERSION: {name}\nScale: ×{tin_scale:.2f}\n\nINGREDIENTS:\n"
+            st.markdown("**🧂 Converted Ingredients:**")
+            for line in ingr.strip().split("\n"):
+                if line.strip():
+                    qty, rest = _parse_qty(line)
+                    if qty is not None:
+                        new_line = f"{_fmt(qty * tin_scale)}{rest}"
+                    else:
+                        new_line = line
+                    st.markdown(f"• {new_line}")
+                    tin_result += f"• {new_line}\n"
+
+            if steps:
+                st.markdown("**📋 Steps** *(quantities in steps scaled too)*")
+                tin_result += "\nSTEPS:\n"
+                for line in steps.strip().split("\n"):
+                    if line.strip():
+                        st.markdown(f"<p style='color:#2C1A0E;margin:4px 0'>{line.strip()}</p>", unsafe_allow_html=True)
+                        tin_result += line.strip() + "\n"
+
+            st.download_button("📥 Download converted recipe", data=tin_result,
+                               file_name=f"{name}_tin_converted.txt", mime="text/plain",
+                               key=f"tindl_{rec_id}")
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
         if show_delete:
             st.write("")
@@ -1429,6 +1556,279 @@ def page_full_index():
         st.write("")
 
 
+
+# ─── Recipe Finder ────────────────────────────────────────────────────────────
+def page_recipe_finder():
+    st.markdown("<div class='section-header'>🔍 Recipe Finder & Comparator</div>", unsafe_allow_html=True)
+    st.markdown("Search any dessert and compare up to 10 recipes from around the web side by side.")
+
+    search_term = st.text_input("🔍 Search for a dessert or baked good",
+                                 placeholder="e.g. tiramisu, black forest cake, crème brûlée...")
+
+    if st.button("🌐 Find Recipes Online", use_container_width=True) and search_term:
+        # Build search URLs for top recipe sites
+        RECIPE_SITES = [
+            ("RecipeTin Eats",     f"https://www.recipetineats.com/?s={urllib.parse.quote(search_term)}"),
+            ("Serious Eats",       f"https://www.seriouseats.com/search?q={urllib.parse.quote(search_term)}"),
+            ("BBC Good Food",      f"https://www.bbcgoodfood.com/search?q={urllib.parse.quote(search_term)}"),
+            ("Taste.com.au",       f"https://www.taste.com.au/search/results?search={urllib.parse.quote(search_term)}"),
+            ("AllRecipes",         f"https://www.allrecipes.com/search?q={urllib.parse.quote(search_term)}"),
+            ("King Arthur Baking", f"https://www.kingarthurbaking.com/search#{urllib.parse.quote(search_term)}"),
+            ("Sally's Baking",     f"https://sallysbakingaddiction.com/?s={urllib.parse.quote(search_term)}"),
+            ("Preppy Kitchen",     f"https://preppykitchen.com/?s={urllib.parse.quote(search_term)}"),
+            ("Handle the Heat",    f"https://handletheheat.com/?s={urllib.parse.quote(search_term)}"),
+            ("Cloudy Kitchen",     f"https://www.cloudykitchen.com/?s={urllib.parse.quote(search_term)}"),
+        ]
+        st.session_state["finder_results"] = RECIPE_SITES
+        st.session_state["finder_term"] = search_term
+
+    if "finder_results" in st.session_state:
+        term = st.session_state["finder_term"]
+        sites = st.session_state["finder_results"]
+
+        st.markdown(f"### 📋 Top recipe sources for: **{term}**")
+        st.info("Click any site to open their search results. Find a recipe you like and copy its URL into Import from URL to save it!")
+
+        cols = st.columns(2)
+        for i, (site_name, url) in enumerate(sites):
+            with cols[i % 2]:
+                yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(term + ' ' + site_name + ' recipe')}"
+                st.markdown(f"""
+                <div class='recipe-card'>
+                    <b>#{i+1} {site_name}</b><br>
+                    <a href='{url}' target='_blank' style='color:#C87941'>🌐 Search {site_name} →</a>
+                    &nbsp;&nbsp;
+                    <a href='{yt_url}' target='_blank' style='color:#888'>▶️ YouTube</a>
+                </div>
+                """, unsafe_allow_html=True)
+
+        st.markdown("---")
+        st.markdown("### ⚖️ Compare Recipes from Your Library")
+        st.markdown("Import multiple versions of the same recipe, then compare them below.")
+
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT id, name, category FROM recipes ORDER BY name")
+        all_recipes = c.fetchall()
+        conn.close()
+
+        if len(all_recipes) < 2:
+            st.info("Add at least 2 recipes to your library to compare them here!")
+        else:
+            recipe_options = {f"{r['name']} ({r['category']})": r['id'] for r in all_recipes}
+            selected = st.multiselect("Select recipes to compare (pick 2-5):",
+                                       list(recipe_options.keys()), max_selections=5)
+
+            if len(selected) >= 2:
+                # Fetch selected recipes
+                ids = [recipe_options[s] for s in selected]
+                conn = get_db()
+                c = conn.cursor()
+                placeholders = ",".join("?" * len(ids))
+                c.execute(f"SELECT * FROM recipes WHERE id IN ({placeholders})", ids)
+                recipes = c.fetchall()
+                conn.close()
+
+                st.markdown("### 📊 Side-by-Side Comparison")
+
+                # Flavor comparison table
+                flavor_keys = ["flavor_sweetness","flavor_tartness","flavor_richness",
+                                "flavor_bitterness","flavor_nuttiness","flavor_floral"]
+                flavor_labels = ["🍯 Sweet","🍋 Tart","🧈 Rich","☕ Bitter","🥜 Nutty","🌸 Floral"]
+
+                header_cols = st.columns(len(recipes)+1)
+                with header_cols[0]:
+                    st.markdown("**Flavor**")
+                for j, r in enumerate(recipes):
+                    with header_cols[j+1]:
+                        st.markdown(f"**{r['name'][:20]}**")
+
+                for key, label in zip(flavor_keys, flavor_labels):
+                    row_cols = st.columns(len(recipes)+1)
+                    with row_cols[0]:
+                        st.markdown(label)
+                    vals = []
+                    for j, r in enumerate(recipes):
+                        try: v = int(r[key]) if r[key] else 5
+                        except: v = 5
+                        vals.append(v)
+                    best_idx = vals.index(max(vals))
+                    for j, (r, v) in enumerate(zip(recipes, vals)):
+                        with row_cols[j+1]:
+                            color = "#C87941" if j == best_idx else "#888"
+                            st.markdown(f"<b style='color:{color}'>{v}/10</b>", unsafe_allow_html=True)
+                            st.progress(v/10)
+
+                st.markdown("---")
+                # Ingredient count comparison
+                ingr_cols = st.columns(len(recipes))
+                for j, r in enumerate(recipes):
+                    with ingr_cols[j]:
+                        ingr_lines = [l for l in (r['ingredients'] or "").split("\n") if l.strip()]
+                        steps_lines = [l for l in (r['steps'] or "").split("\n") if l.strip()]
+                        st.markdown(f"**{r['name']}**")
+                        st.metric("Ingredients", len(ingr_lines))
+                        st.metric("Steps", len(steps_lines))
+                        diff = r['difficulty'] or "Medium"
+                        st.markdown(f"Difficulty: **{diff}**")
+                        if r['source_url']:
+                            st.markdown(f"[📖 Source]({r['source_url']})")
+
+                # Best pick recommendation
+                st.markdown("---")
+                st.markdown("### 🏆 Which recipe to pick?")
+                for r in recipes:
+                    ingr_count = len([l for l in (r['ingredients'] or "").split("\n") if l.strip()])
+                    step_count = len([l for l in (r['steps'] or "").split("\n") if l.strip()])
+                    simplicity = "Simple" if ingr_count <= 8 and step_count <= 6 else "Complex" if ingr_count > 12 else "Moderate"
+                    try: sweet = int(r['flavor_sweetness'] or 5)
+                    except: sweet = 5
+                    try: rich = int(r['flavor_richness'] or 5)
+                    except: rich = 5
+                    st.markdown(f"**{r['name']}** — {ingr_count} ingredients, {step_count} steps, {simplicity} complexity, sweetness {sweet}/10, richness {rich}/10")
+
+
+# ─── Practice Schedule ────────────────────────────────────────────────────────
+def page_schedule():
+    st.markdown("<div class='section-header'>📅 Baking Practice Schedule</div>", unsafe_allow_html=True)
+    st.markdown("Build your personal weekly baking practice plan. Work through skills systematically!")
+
+    SKILL_CURRICULUM = {
+        "🟢 Beginner": [
+            ("Week 1",  "Basic Sponge Cake",        "Master a simple Victoria sponge — mixing, baking, testing doneness.",
+             ["https://www.youtube.com/results?search_query=victoria+sponge+beginner+tutorial"]),
+            ("Week 2",  "American Buttercream",      "Learn to make a stable buttercream and apply a crumb coat.",
+             ["https://www.youtube.com/results?search_query=american+buttercream+tutorial+beginner"]),
+            ("Week 3",  "Simple Cookies",            "Shortbread or sugar cookies — practice consistency in rolling and baking.",
+             ["https://www.youtube.com/results?search_query=shortbread+cookies+beginner"]),
+            ("Week 4",  "Pound Cake / Loaf Cake",    "Learn the creaming method — butter + sugar technique.",
+             ["https://www.youtube.com/results?search_query=pound+cake+tutorial"]),
+            ("Week 5",  "Simple Tart Shell",         "Pâte sablée — blind baking and preventing shrinkage.",
+             ["https://www.youtube.com/results?search_query=tart+shell+pate+sablee+tutorial"]),
+            ("Week 6",  "Whipped Cream & Filling",   "Stabilized whipped cream, diplomat cream, filling between layers.",
+             ["https://www.youtube.com/results?search_query=how+to+fill+cake+layers"]),
+        ],
+        "🟡 Intermediate": [
+            ("Week 7",  "Swiss Meringue Buttercream","Cook egg whites + sugar, whip to glossy SMBC — the gold standard.",
+             ["https://www.youtube.com/results?search_query=swiss+meringue+buttercream+tutorial"]),
+            ("Week 8",  "Chiffon / Genoise Sponge",  "Air-based cakes — folding technique, preventing deflation.",
+             ["https://www.youtube.com/results?search_query=genoise+sponge+tutorial"]),
+            ("Week 9",  "Ganache & Chocolate Work",  "Perfect ganache ratios, chocolate drip, tempering basics.",
+             ["https://www.youtube.com/results?search_query=chocolate+ganache+drip+cake+tutorial"]),
+            ("Week 10", "Pastry Cream",               "Crème pâtissière — cooking to right consistency, no lumps.",
+             ["https://www.youtube.com/results?search_query=pastry+cream+creme+patissiere+tutorial"]),
+            ("Week 11", "Smooth Cake Finish",         "Sharp edges, smooth sides, ombré — bench scraper technique.",
+             ["https://www.youtube.com/results?search_query=smooth+buttercream+cake+sharp+edges+tutorial"]),
+            ("Week 12", "Macarons",                   "French macaronage — folding, piping, feet formation, filling.",
+             ["https://www.youtube.com/results?search_query=french+macaron+tutorial+beginner"]),
+        ],
+        "🔴 Advanced": [
+            ("Week 13", "Italian Meringue Buttercream","Hot sugar syrup + meringue — silkiest buttercream.",
+             ["https://www.youtube.com/results?search_query=italian+meringue+buttercream+tutorial"]),
+            ("Week 14", "Croissants",                 "Lamination — butter block, folding, proofing, the honeycomb interior.",
+             ["https://www.youtube.com/results?search_query=croissant+from+scratch+tutorial"]),
+            ("Week 15", "Mirror Glaze Entremet",      "Mousse cake construction, insert layers, mirror glaze at 35°C.",
+             ["https://www.youtube.com/results?search_query=mirror+glaze+entremet+tutorial"]),
+            ("Week 16", "Sugar & Isomalt Work",       "Caramel cages, spun sugar, isomalt shards and decorations.",
+             ["https://www.youtube.com/results?search_query=sugar+decoration+caramel+cage+tutorial"]),
+            ("Week 17", "Buttercream Flowers",        "Korean-style piping — rose, chrysanthemum, ranunculus.",
+             ["https://www.youtube.com/results?search_query=korean+buttercream+flowers+tutorial"]),
+            ("Week 18", "Chocolate Showpiece",        "Tempering, moulding, transfer sheets, chocolate decorations.",
+             ["https://www.youtube.com/results?search_query=chocolate+showpiece+decoration+tutorial"]),
+        ],
+    }
+
+    # My schedule tracker in session state
+    if "my_schedule" not in st.session_state:
+        st.session_state["my_schedule"] = {}
+
+    tab1, tab2, tab3 = st.tabs(["📋 Full Curriculum", "✅ My Progress", "➕ Custom Skill"])
+
+    with tab1:
+        for level, weeks in SKILL_CURRICULUM.items():
+            st.markdown(f"### {level}")
+            for week, skill, desc, links in weeks:
+                done_key = f"done_{week}_{skill}"
+                is_done = st.session_state["my_schedule"].get(done_key, False)
+                c1, c2 = st.columns([5, 1])
+                with c1:
+                    status = "✅" if is_done else "⬜"
+                    st.markdown(f"""
+                    <div class='recipe-card' style='{"opacity:0.6" if is_done else ""}'>
+                        <b>{status} {week}: {skill}</b><br>
+                        <small style='color:#666'>{desc}</small><br>
+                        <a href='{links[0]}' target='_blank' style='color:#C87941;font-size:0.85em'>▶️ Watch tutorial →</a>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with c2:
+                    if st.button("✅ Done" if not is_done else "↩️ Redo",
+                                  key=f"btn_{week}_{skill}"):
+                        st.session_state["my_schedule"][done_key] = not is_done
+                        st.rerun()
+
+    with tab2:
+        done_count = sum(1 for v in st.session_state["my_schedule"].values() if v)
+        total = sum(len(w) for w in SKILL_CURRICULUM.values())
+        st.markdown(f"### 🏆 Progress: {done_count}/{total} skills completed")
+        st.progress(done_count / total)
+
+        if done_count > 0:
+            st.markdown("**Completed skills:**")
+            for level, weeks in SKILL_CURRICULUM.items():
+                for week, skill, desc, _ in weeks:
+                    done_key = f"done_{week}_{skill}"
+                    if st.session_state["my_schedule"].get(done_key):
+                        st.markdown(f"✅ {week}: **{skill}**")
+        if done_count < total:
+            # Find next skill
+            for level, weeks in SKILL_CURRICULUM.items():
+                for week, skill, desc, links in weeks:
+                    done_key = f"done_{week}_{skill}"
+                    if not st.session_state["my_schedule"].get(done_key):
+                        st.markdown("---")
+                        st.markdown(f"### 👉 Up Next: {week} — {skill}")
+                        st.markdown(f"_{desc}_")
+                        st.markdown(f"[▶️ Watch tutorial]({links[0]})")
+                        break
+                else:
+                    continue
+                break
+
+    with tab3:
+        st.markdown("### ➕ Add a Custom Practice Week")
+        with st.form("custom_skill_form"):
+            cs_week = st.text_input("Week label", placeholder="e.g. Week 19")
+            cs_skill = st.text_input("Skill name", placeholder="e.g. Opera Cake")
+            cs_desc  = st.text_area("Description", placeholder="What will you practice?")
+            cs_link  = st.text_input("Tutorial link (YouTube or website)")
+            if st.form_submit_button("➕ Add to My Schedule"):
+                if cs_week and cs_skill:
+                    key = f"custom_{cs_week}_{cs_skill}"
+                    st.session_state["my_schedule"][f"desc_{key}"] = cs_desc
+                    st.session_state["my_schedule"][f"link_{key}"] = cs_link
+                    st.session_state["my_schedule"][f"added_{key}"] = True
+                    st.success(f"Added '{cs_skill}' to your schedule!")
+
+        # Show custom skills
+        custom_skills = [(k,v) for k,v in st.session_state["my_schedule"].items() if k.startswith("added_")]
+        if custom_skills:
+            st.markdown("**Your custom skills:**")
+            for key, _ in custom_skills:
+                base = key.replace("added_", "")
+                skill_name = base.split("_", 2)[-1] if "_" in base else base
+                desc  = st.session_state["my_schedule"].get(f"desc_{base}", "")
+                link  = st.session_state["my_schedule"].get(f"link_{base}", "")
+                done  = st.session_state["my_schedule"].get(f"done_{base}", False)
+                c1, c2 = st.columns([5,1])
+                with c1:
+                    st.markdown(f"{'✅' if done else '⬜'} **{skill_name}** — {desc}")
+                    if link: st.markdown(f"[▶️ Tutorial]({link})")
+                with c2:
+                    if st.button("✅/↩️", key=f"custbtn_{base}"):
+                        st.session_state["my_schedule"][f"done_{base}"] = not done
+                        st.rerun()
+
+
 # ─── Main App ────────────────────────────────────────────────────────────────────
 init_db()
 
@@ -1445,9 +1845,11 @@ with st.sidebar:
     pages = [
         "🏠 Home",
         "📚 Recipe Library",
+        "🔍 Recipe Finder & Compare",
         "✏️ Add Recipe",
         "🔗 Import from URL",
         "🎨 Flavor Explorer",
+        "📅 Practice Schedule",
         "🎬 Techniques & Videos",
         "👩‍🍳 Chef Inspirations",
         "🌍 World Dessert Index",
@@ -1470,12 +1872,16 @@ if page == "🏠 Home":
     page_home()
 elif page == "📚 Recipe Library":
     page_browse()
+elif page == "🔍 Recipe Finder & Compare":
+    page_recipe_finder()
 elif page == "✏️ Add Recipe":
     page_add_recipe()
 elif page == "🔗 Import from URL":
     page_import_url()
 elif page == "🎨 Flavor Explorer":
     page_flavor_explorer()
+elif page == "📅 Practice Schedule":
+    page_schedule()
 elif page == "🎬 Techniques & Videos":
     page_techniques()
 elif page == "👩‍🍳 Chef Inspirations":
