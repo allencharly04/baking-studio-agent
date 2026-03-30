@@ -232,8 +232,15 @@ def init_db():
         difficulty TEXT DEFAULT 'Medium',
         tags TEXT,
         notes TEXT,
+        thumbnail_url TEXT,
         created_at TEXT
     )""")
+    # Migrate existing DBs — add thumbnail_url if missing
+    try:
+        c.execute("ALTER TABLE recipes ADD COLUMN thumbnail_url TEXT")
+        conn.commit()
+    except Exception:
+        pass  # column already exists
     conn.commit()
     conn.close()
 
@@ -249,14 +256,15 @@ def save_recipe(data):
         (name, category, subcategory, description, ingredients, steps,
          flavor_sweetness, flavor_tartness, flavor_richness, flavor_bitterness,
          flavor_nuttiness, flavor_floral, source_url, video_url, instagram_url,
-         region, difficulty, tags, notes, created_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+         region, difficulty, tags, notes, thumbnail_url, created_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (data['name'], data['category'], data['subcategory'], data['description'],
          data['ingredients'], data['steps'],
          data['sweetness'], data['tartness'], data['richness'], data['bitterness'],
          data['nuttiness'], data['floral'],
          data['source_url'], data['video_url'], data['instagram_url'],
          data['region'], data['difficulty'], data['tags'], data['notes'],
+         data.get('thumbnail_url', ''),
          datetime.now().strftime("%Y-%m-%d %H:%M")))
     conn.commit()
     conn.close()
@@ -371,14 +379,39 @@ def scrape_recipe_from_url(url):
 
                     steps = "\n".join(steps_lines)
 
+                    # Grab thumbnail image
+                    thumb = ""
+                    img_data = item.get("image", "")
+                    if isinstance(img_data, str):
+                        thumb = img_data
+                    elif isinstance(img_data, list) and img_data:
+                        first = img_data[0]
+                        thumb = first.get("url", first) if isinstance(first, dict) else first
+                    elif isinstance(img_data, dict):
+                        thumb = img_data.get("url", "")
+
                     if name or ingredients:
-                        return {"name": name, "ingredients": ingredients, "steps": steps, "description": desc, "success": True}
+                        return {"name": name, "ingredients": ingredients, "steps": steps,
+                                "description": desc, "thumbnail_url": thumb, "success": True}
             except Exception:
                 continue
 
         # Priority 2: Heuristic fallback
         title = soup.find("h1")
         name = title.get_text(strip=True) if title else ""
+
+        # Try to grab first meaningful image from og:image or first <img>
+        thumb = ""
+        og_img = soup.find("meta", property="og:image")
+        if og_img and og_img.get("content"):
+            thumb = og_img["content"]
+        else:
+            for img in soup.find_all("img"):
+                src = img.get("src", "")
+                if src.startswith("http") and any(ext in src.lower() for ext in [".jpg", ".jpeg", ".png", ".webp"]):
+                    if int(img.get("width", 200)) > 100:
+                        thumb = src
+                        break
 
         measure_words = ["cup", "tbsp", "tsp", "gram", " g ", "oz", "ml", "litre",
                          "liter", "pinch", "handful", "clove", "kg", "lb"]
@@ -404,11 +437,12 @@ def scrape_recipe_from_url(url):
             "ingredients": "\n".join(ingredients[:40]),
             "steps": "\n".join(steps_lines),
             "description": "",
+            "thumbnail_url": thumb,
             "success": bool(name or ingredients)
         }
 
     except Exception as e:
-        return {"name": "", "ingredients": "", "steps": "", "description": "", "success": False, "error": str(e)}
+        return {"name": "", "ingredients": "", "steps": "", "description": "", "thumbnail_url": "", "success": False, "error": str(e)}
 
 # ─── Data Structures ─────────────────────────────────────────────────────────────
 CATEGORIES = {
@@ -530,7 +564,6 @@ def render_flavor_bars(row):
             st.progress(val / 10)
 
 def render_recipe_card(row, show_delete=False):
-    # Use column names (works regardless of column order in old DBs)
     name       = row["name"]
     subcat     = row["subcategory"] or ""
     desc       = row["description"] or ""
@@ -542,17 +575,36 @@ def render_recipe_card(row, show_delete=False):
     difficulty = row["difficulty"] or "Medium"
     tags       = row["tags"] or ""
     rec_id     = row["id"]
+    try:
+        thumb  = row["thumbnail_url"] or ""
+    except Exception:
+        thumb  = ""
 
-    with st.expander(f"**{name}** — _{subcat}_  |  ⚙️ {difficulty}", expanded=False):
+    # ── Compact card with thumbnail ──────────────────────────────────────
+    thumb_col, info_col = st.columns([1, 4])
+    with thumb_col:
+        if thumb:
+            st.markdown(f"""<img src="{thumb}" style="width:100%;border-radius:12px;
+                object-fit:cover;height:90px;" onerror="this.style.display='none'">""",
+                unsafe_allow_html=True)
+        else:
+            st.markdown("<div style='background:#F2C4B0;border-radius:12px;height:90px;"
+                        "display:flex;align-items:center;justify-content:center;"
+                        "font-size:2em'>🎂</div>", unsafe_allow_html=True)
+    with info_col:
+        st.markdown(f"**{name}**  <span style='color:#888;font-size:0.85em'>— {subcat} | ⚙️ {difficulty}</span>",
+                    unsafe_allow_html=True)
+        if desc:
+            st.markdown(f"<small style='color:#666'>{desc[:120]}{'...' if len(desc)>120 else ''}</small>",
+                        unsafe_allow_html=True)
+
+    with st.expander("📖 View full recipe  |  🤖 Tweak with AI", expanded=False):
         col1, col2 = st.columns([3, 2])
         with col1:
-            if desc:
-                st.markdown(f"_{desc}_")
             if tags:
                 for tag in tags.split(","):
                     st.markdown(f"<span class='tag-pill'>{tag.strip()}</span>", unsafe_allow_html=True)
                 st.write("")
-
             if ingr:
                 st.markdown("**🧂 Ingredients**")
                 for line in ingr.strip().split("\n"):
@@ -564,20 +616,258 @@ def render_recipe_card(row, show_delete=False):
                     if line.strip():
                         st.markdown(f"<p style='color:#2C1A0E;margin:4px 0'>{line.strip()}</p>",
                                     unsafe_allow_html=True)
+            links = []
+            if source_url: links.append(f"[📖 Source]({source_url})")
+            if video_url:  links.append(f"[▶️ Video]({video_url})")
+            if insta_url:  links.append(f"[📸 Instagram]({insta_url})")
+            if links:
+                st.write("")
+                st.markdown("  |  ".join(links))
 
         with col2:
             st.markdown("**Flavor Profile**")
             render_flavor_bars(row)
+
+        # ── Formula-Based Recipe Tweaker ──────────────────────────────────────
+        st.markdown("---")
+        st.markdown("### 🔧 Tweak This Recipe")
+
+        tw1, tw2 = st.columns(2)
+        with tw1:
+            orig_servings = st.number_input("Original recipe serves", min_value=1, max_value=50, value=4, key=f"orig_{rec_id}")
+        with tw2:
+            new_servings  = st.number_input("👥 I want to make for", min_value=1, max_value=100, value=4, key=f"new_{rec_id}")
+
+        health_mode = st.selectbox("🥗 Recipe version",
+                                    ["Original", "Healthier", "Indulgent"],
+                                    key=f"hlth_{rec_id}")
+
+        st.markdown("**🎨 Flavor adjustments:**")
+        fa1, fa2, fa3 = st.columns(3)
+        flavor_opts = ["Much Less (×0.5)", "Less (×0.75)", "Same", "More (×1.25)", "Much More (×1.5)"]
+        spice_opts  = ["None", "Mild", "Medium", "Hot", "Very Hot"]
+        with fa1:
+            adj_sweet  = st.selectbox("🍯 Sweetness",  flavor_opts, index=2, key=f"sw_{rec_id}")
+            adj_salt   = st.selectbox("🧂 Saltiness",  flavor_opts, index=2, key=f"sa_{rec_id}")
+        with fa2:
+            adj_bitter = st.selectbox("☕ Bitterness", flavor_opts, index=2, key=f"bi_{rec_id}")
+            adj_tart   = st.selectbox("🍋 Tartness",   flavor_opts, index=2, key=f"ta_{rec_id}")
+        with fa3:
+            adj_rich   = st.selectbox("🧈 Richness",   flavor_opts, index=2, key=f"ri_{rec_id}")
+            adj_spicy  = st.selectbox("🌶️ Spiciness",  spice_opts,  index=0, key=f"sp_{rec_id}")
+
+        if st.button("🔧 Generate Tweaked Recipe", key=f"tweak_{rec_id}", use_container_width=True):
+            scale = new_servings / max(orig_servings, 1)
+
+            # Multiplier map
+            mult_map = {
+                "Much Less (×0.5)": 0.5, "Less (×0.75)": 0.75, "Same": 1.0,
+                "More (×1.25)": 1.25, "Much More (×1.5)": 1.5
+            }
+            sw_m = mult_map[adj_sweet]
+            sa_m = mult_map[adj_salt]
+            bi_m = mult_map[adj_bitter]
+            ta_m = mult_map[adj_tart]
+            ri_m = mult_map[adj_rich]
+
+            # Sweetener keywords → apply sweetness multiplier
+            SWEET_WORDS  = ["sugar","honey","maple syrup","condensed milk","icing sugar",
+                             "powdered sugar","caster sugar","brown sugar","golden syrup","molasses","jam","nutella"]
+            SALT_WORDS   = ["salt","sea salt","kosher salt","fleur de sel"]
+            BITTER_WORDS = ["cocoa","dark chocolate","espresso","coffee","bittersweet","coffee powder"]
+            TART_WORDS   = ["lemon juice","lime juice","orange juice","vinegar","cream of tartar",
+                             "lemon zest","lime zest","buttermilk","sour cream","yogurt","citric acid"]
+            RICH_WORDS   = ["butter","cream","heavy cream","double cream","mascarpone","cream cheese",
+                             "egg yolk","coconut cream","full fat","ghee","crème fraîche"]
+
+            # Health substitutions
+            HEALTH_SUBS = {
+                "sugar":            ("coconut sugar or honey",       0.75),
+                "caster sugar":     ("coconut sugar",                0.75),
+                "brown sugar":      ("coconut sugar",                0.75),
+                "icing sugar":      ("powdered coconut sugar",       0.80),
+                "butter":           ("unsalted butter (or coconut oil for dairy-free)", 0.85),
+                "heavy cream":      ("coconut cream or light cream", 0.90),
+                "double cream":     ("light cream or coconut cream", 0.90),
+                "all-purpose flour":("whole wheat flour (or 50/50 mix)", 1.0),
+                "plain flour":      ("whole wheat flour (or 50/50 mix)", 1.0),
+                "white flour":      ("whole wheat flour",            1.0),
+                "cream cheese":     ("low-fat cream cheese",         1.0),
+                "milk":             ("low-fat milk or oat milk",     1.0),
+            }
+
+            # Indulgent additions by recipe type
+            INDULGENT_ADDS = {
+                "chocolate": "Add an extra 20% dark chocolate for deeper flavour.",
+                "cream":     "Add an extra splash of heavy cream for richness.",
+                "butter":    "Brown the butter before using for nutty depth.",
+                "vanilla":   "Add ½ tsp extra vanilla extract.",
+                "caramel":   "Drizzle salted caramel between layers.",
+            }
+
+            # Spice additions
+            SPICE_ADDS = {
+                "Mild":     "Add ¼ tsp ground cinnamon and a pinch of ginger.",
+                "Medium":   "Add ½ tsp cinnamon, ¼ tsp ginger, pinch of cardamom.",
+                "Hot":      "Add ½ tsp cinnamon, ¼ tsp cayenne pepper, ¼ tsp chilli flakes.",
+                "Very Hot": "Add 1 tsp cinnamon, ½ tsp cayenne pepper, ½ tsp chilli flakes — bold!",
+            }
+
+            def parse_quantity(text):
+                """Extract leading number/fraction from ingredient string."""
+                text = text.strip()
+                # Handle fractions like 1/2, 1/4, 3/4
+                frac = re.match(r'^(\d+)\s*/\s*(\d+)', text)
+                if frac:
+                    return float(frac.group(1)) / float(frac.group(2)), text[frac.end():]
+                # Handle mixed numbers like 1 1/2
+                mixed = re.match(r'^(\d+)\s+(\d+)\s*/\s*(\d+)', text)
+                if mixed:
+                    whole = int(mixed.group(1))
+                    num   = int(mixed.group(2))
+                    den   = int(mixed.group(3))
+                    return whole + num/den, text[mixed.end():]
+                # Handle decimals / plain integers
+                num = re.match(r'^(\d+\.?\d*)', text)
+                if num:
+                    return float(num.group(1)), text[num.end():]
+                return None, text
+
+            def format_qty(val):
+                """Format a float quantity nicely."""
+                if val == int(val):
+                    return str(int(val))
+                # Try common fractions
+                for num, den, label in [(1,4,"¼"),(1,3,"⅓"),(1,2,"½"),(2,3,"⅔"),(3,4,"¾")]:
+                    if abs(val - num/den) < 0.04:
+                        return label
+                for whole in range(1, 20):
+                    for num, den, label in [(1,4,"¼"),(1,3,"⅓"),(1,2,"½"),(2,3,"⅔"),(3,4,"¾")]:
+                        if abs(val - (whole + num/den)) < 0.04:
+                            return f"{whole} {label}"
+                return f"{val:.1f}".rstrip('0').rstrip('.')
+
+            def tweak_ingredient(line, scale, sw_m, sa_m, bi_m, ta_m, ri_m,
+                                  health_mode, SWEET_WORDS, SALT_WORDS,
+                                  BITTER_WORDS, TART_WORDS, RICH_WORDS,
+                                  HEALTH_SUBS):
+                line_lower = line.lower()
+                qty, rest = parse_quantity(line)
+
+                # Detect flavor category
+                is_sweet  = any(w in line_lower for w in SWEET_WORDS)
+                is_salt   = any(w in line_lower for w in SALT_WORDS)
+                is_bitter = any(w in line_lower for w in BITTER_WORDS)
+                is_tart   = any(w in line_lower for w in TART_WORDS)
+                is_rich   = any(w in line_lower for w in RICH_WORDS)
+
+                flavor_mult = 1.0
+                if is_sweet:  flavor_mult *= sw_m
+                if is_salt:   flavor_mult *= sa_m
+                if is_bitter: flavor_mult *= bi_m
+                if is_tart:   flavor_mult *= ta_m
+                if is_rich:   flavor_mult *= ri_m
+
+                notes = []
+
+                # Health substitutions
+                if health_mode == "Healthier":
+                    for keyword, (sub, sub_scale) in HEALTH_SUBS.items():
+                        if keyword in line_lower:
+                            notes.append(f"→ sub with {sub}")
+                            flavor_mult *= sub_scale
+                            break
+
+                if qty is not None:
+                    new_qty = qty * scale * flavor_mult
+                    new_line = f"{format_qty(new_qty)}{rest}"
+                else:
+                    new_line = line
+
+                if notes:
+                    new_line += f"  *({', '.join(notes)})*"
+
+                return new_line
+
+            # ── Process all ingredients ──
+            tweaked_lines = []
+            orig_lines = [l for l in ingr.strip().split("\n") if l.strip()]
+            for line in orig_lines:
+                tweaked_lines.append(tweak_ingredient(
+                    line, scale, sw_m, sa_m, bi_m, ta_m, ri_m,
+                    health_mode, SWEET_WORDS, SALT_WORDS,
+                    BITTER_WORDS, TART_WORDS, RICH_WORDS, HEALTH_SUBS
+                ))
+
+            # ── Build change notes ──
+            change_notes = []
+            if scale != 1.0:
+                change_notes.append(f"📐 **Scaled** from {orig_servings} → {new_servings} servings (×{scale:.2f})")
+            if adj_sweet != "Same":
+                change_notes.append(f"🍯 Sweetness {adj_sweet.lower()} — sugar/sweeteners adjusted")
+            if adj_salt  != "Same":
+                change_notes.append(f"🧂 Saltiness {adj_salt.lower()} — salt adjusted")
+            if adj_bitter != "Same":
+                change_notes.append(f"☕ Bitterness {adj_bitter.lower()} — cocoa/coffee adjusted")
+            if adj_tart  != "Same":
+                change_notes.append(f"🍋 Tartness {adj_tart.lower()} — citrus/acid adjusted")
+            if adj_rich  != "Same":
+                change_notes.append(f"🧈 Richness {adj_rich.lower()} — cream/butter adjusted")
+            if adj_spicy != "None":
+                change_notes.append(f"🌶️ Spice: {SPICE_ADDS[adj_spicy]}")
+            if health_mode == "Healthier":
+                change_notes.append("🥗 **Healthier version** — sugar → coconut sugar/honey, butter reduced, whole grain flour suggested where applicable")
+            elif health_mode == "Indulgent":
+                ingr_lower = ingr.lower()
+                for kw, tip in INDULGENT_ADDS.items():
+                    if kw in ingr_lower:
+                        change_notes.append(f"🍫 **Indulgent tip:** {tip}")
+                        break
+                else:
+                    change_notes.append("🍫 **Indulgent version** — increase richness and flavour intensity")
+
+            # ── Display result ──
+            st.markdown("---")
+            st.markdown("### ✨ Tweaked Recipe")
+
+            if change_notes:
+                st.markdown("**📝 Changes made:**")
+                for note in change_notes:
+                    st.markdown(f"- {note}")
+                st.write("")
+
+            st.markdown(f"**🧂 Ingredients** *(for {new_servings} servings)*")
+            result_text = f"TWEAKED RECIPE: {name}\nFor {new_servings} servings\n\n"
+            result_text += "CHANGES:\n" + "\n".join(f"- {n}" for n in change_notes) + "\n\n"
+            result_text += "INGREDIENTS:\n"
+            for line in tweaked_lines:
+                st.markdown(f"• {line}")
+                result_text += f"• {line}\n"
+
+            if adj_spicy != "None":
+                spice_line = f"+ {SPICE_ADDS[adj_spicy]}"
+                st.markdown(f"• {spice_line}")
+                result_text += f"• {spice_line}\n"
+
+            if steps:
+                st.markdown(f"\n**📋 Steps** *(unchanged — scaling is in the ingredients above)*")
+                result_text += "\nSTEPS:\n"
+                for line in steps.strip().split("\n"):
+                    if line.strip():
+                        st.markdown(f"<p style='color:#2C1A0E;margin:4px 0'>{line.strip()}</p>",
+                                    unsafe_allow_html=True)
+                        result_text += line.strip() + "\n"
+
             st.write("")
-            links = []
-            if source_url: links.append(f"[📖 Recipe Source]({source_url})")
-            if video_url:  links.append(f"[▶️ Video Tutorial]({video_url})")
-            if insta_url:  links.append(f"[📸 Instagram]({insta_url})")
-            if links:
-                st.markdown("  |  ".join(links))
+            st.download_button("📥 Download tweaked recipe",
+                               data=result_text,
+                               file_name=f"{name}_tweaked_{new_servings}servings.txt",
+                               mime="text/plain",
+                               key=f"dl_{rec_id}")
 
         if show_delete:
-            if st.button(f"🗑️ Delete", key=f"del_{rec_id}"):
+            st.write("")
+            if st.button(f"🗑️ Delete Recipe", key=f"del_{rec_id}"):
                 delete_recipe(rec_id)
                 st.success("Recipe deleted!")
                 st.rerun()
@@ -914,7 +1204,8 @@ def page_import_url():
                     "bitterness": bitterness, "nuttiness": nuttiness, "floral": floral,
                     "source_url": st.session_state.get("scraped_url", ""),
                     "video_url": video_url, "instagram_url": instagram_url,
-                    "region": "", "difficulty": difficulty, "tags": tags, "notes": ""
+                    "region": "", "difficulty": difficulty, "tags": tags, "notes": "",
+                    "thumbnail_url": st.session_state.get("scraped", {}).get("thumbnail_url", "")
                 })
                 st.success(f"✅ '{name}' saved!")
                 del st.session_state["scraped"]
